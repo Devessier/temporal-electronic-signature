@@ -1,0 +1,11 @@
+{
+  "name": "temporal-electronic-signature",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:Devessier/temporal-electronic-signature.git",
+  "author": "Devessier <baptiste@devessier.fr>",
+  "license": "MIT",
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  }
+}
