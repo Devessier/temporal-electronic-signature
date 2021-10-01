@@ -1,7 +1,23 @@
+export type ElectronicSignatureProcedureStatus =
+    | `PENDING.${
+          | 'WATCHING_DOCUMENT'
+          | 'WAITING_AGREEMENT'
+          | 'SENDING_CONFIRMATION_CODE'
+          | 'WAITING_CONFIRMATION_CODE'}`
+    | 'EXPIRED'
+    | 'VALIDATED'
+    | 'CANCELLED';
 
-// Define our Example Workflow type (this step is optional).
-// Workflow types are useful for generating type safe workflow clients
-// in environments where the Workflow implemetations are unavailable.
-export type Example = (name: string) => {
-  execute(): Promise<string>;
+export type ElectronicSignature = () => {
+    execute(): Promise<string>;
+    queries: {
+        status(): ElectronicSignatureProcedureStatus;
+    };
+    signals: {
+        watchedDocument(): void;
+        acceptDocument(): void;
+        validateConfirmationCode(confirmationCode: string): void;
+        resendConfirmationCode(): void;
+        cancelProcedure(): void;
+    };
 };
