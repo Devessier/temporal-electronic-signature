@@ -1,4 +1,4 @@
-// import { createActivityHandle } from '@temporalio/workflow';
+import { sleep } from '@temporalio/workflow';
 import {
     createMachine,
     assign,
@@ -225,7 +225,16 @@ export const electronicSignature: ElectronicSignature = () => {
 
     return {
         async execute(): Promise<string> {
-            const service = interpret(electronicSignatureMachine)
+            const service = interpret(electronicSignatureMachine, {
+                clock: {
+                    setTimeout(fn, timeout) {
+                        sleep(timeout).then(fn);
+                    },
+                    clearTimeout() {
+                        return undefined;
+                    },
+                },
+            })
                 .onTransition((updatedState) => {
                     console.log('transition to', updatedState.value);
 
@@ -242,7 +251,6 @@ export const electronicSignature: ElectronicSignature = () => {
                     resolve(undefined);
                 });
             });
-            console.log('quit waiting for final state');
 
             return 'electronic signature';
         },
