@@ -1489,6 +1489,11 @@
     "@webassemblyjs/ast" "1.11.1"
     "@xtuc/long" "4.2.2"
 
+"@xstate/svelte@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@xstate/svelte/-/svelte-0.2.0.tgz#a26a96da14b569f6145fe2ac5d1b4664e80e143d"
+  integrity sha512-SwPEz0oY6T4B4xvFFqJsuXfNyA0PoEhkrbO3jDQ6fXhwx/x9+Y38mM5w+qGnPtczI7UJ+T0XKWn5GJJsH4JbRA==
+
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@xtuc/ieee754/-/ieee754-1.2.0.tgz#eef014a3145ae477a1cbc00cd1e552336dceb790"
