@@ -21,3 +21,5 @@
 import Route from '@ioc:Adonis/Core/Route'
 
 Route.post('/procedure/create', 'ElectronicSignaturesController.create')
+
+Route.get('/procedure/:uuid', 'ElectronicSignaturesController.status')

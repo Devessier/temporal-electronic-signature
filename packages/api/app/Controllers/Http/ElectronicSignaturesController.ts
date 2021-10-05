@@ -2,7 +2,10 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { schema } from '@ioc:Adonis/Core/Validator'
 import { cuid } from '@ioc:Adonis/Core/Helpers'
 import { Connection, WorkflowClient } from '@temporalio/client'
-import { ElectronicSignature } from '@temporal-electronic-signature/temporal/lib/interfaces'
+import {
+  ElectronicSignature,
+  ElectronicSignatureProcedureStatus,
+} from '@temporal-electronic-signature/temporal/lib/interfaces'
 
 export default class ElectronicSignaturesController {
   public async create({ request }: HttpContextContract): Promise<{
@@ -35,5 +38,18 @@ export default class ElectronicSignaturesController {
       procedureUuid: handle.workflowId,
     }
   }
+
+  public async status({
+    request,
+  }: HttpContextContract): Promise<ElectronicSignatureProcedureStatus> {
+    const procedureUuid = request.param('uuid')
+
+    const connection = new Connection()
+    const client = new WorkflowClient(connection.service)
+    const handle = client.createWorkflowHandle<ElectronicSignature>({ workflowId: procedureUuid })
+
+    const status = await handle.query.status()
+
+    return status
   }
 }
