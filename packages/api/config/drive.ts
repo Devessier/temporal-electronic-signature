@@ -7,7 +7,6 @@
 
 import Env from '@ioc:Adonis/Core/Env'
 import { DriveConfig } from '@ioc:Adonis/Core/Drive'
-import Application from '@ioc:Adonis/Core/Application'
 
 /*
 |--------------------------------------------------------------------------
@@ -95,12 +94,14 @@ const driveConfig: DriveConfig = {
     */
     s3: {
       driver: 's3',
-      visibility: 'public',
+      visibility: 'private',
       key: Env.get('S3_KEY'),
       secret: Env.get('S3_SECRET'),
       region: Env.get('S3_REGION'),
       bucket: Env.get('S3_BUCKET'),
       endpoint: Env.get('S3_ENDPOINT'),
+      // Necessary to use the driver with Minio server
+      forcePathStyle: true,
     },
 
     /*
