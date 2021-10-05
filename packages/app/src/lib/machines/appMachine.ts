@@ -1,7 +1,7 @@
 import { createProcedure } from '$lib/services/procedure';
 import { createModel } from 'xstate/lib/model';
 
-const uploadModel = createModel(
+const appModel = createModel(
 	{
 		selectedFile: undefined as File | undefined
 	},
@@ -16,23 +16,23 @@ const uploadModel = createModel(
 	}
 );
 
-const assignSelectedFile = uploadModel.assign(
+const assignSelectedFile = appModel.assign(
 	{
 		selectedFile: (_, { file }) => file
 	},
 	'SELECT_FILE'
 );
 
-const resetSelectedFile = uploadModel.assign(
+const resetSelectedFile = appModel.assign(
 	{
 		selectedFile: undefined
 	},
 	'CANCEL_PROCEDURE_CREATION'
 );
 
-export const uploadMachine = uploadModel.createMachine(
+export const appMachine = appModel.createMachine(
 	{
-		context: uploadModel.initialContext,
+		context: appModel.initialContext,
 
 		initial: 'selectingFile',
 

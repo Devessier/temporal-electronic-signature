@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import { useMachine } from '@xstate/svelte';
 	import AppLayout from '$lib/AppLayout.svelte';
-	import { uploadMachine } from '$lib/machines/upload';
+	import { useAppContext } from '$lib/contexts/app';
 
-	const { state, send } = useMachine(uploadMachine);
+	const { state, send } = useAppContext();
 	$: selectedFile = $state.context.selectedFile;
 	$: hasSelectedFile = selectedFile !== undefined;
 

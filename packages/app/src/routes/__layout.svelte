@@ -1,5 +1,8 @@
 <script>
 	import '../app.css';
+	import { provideAppContext } from '$lib/contexts/app';
+
+	provideAppContext();
 </script>
 
 <div class="min-h-screen bg-white">
