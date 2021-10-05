@@ -1,3 +1,4 @@
+import { createProcedure } from '$lib/services/procedure';
 import { createModel } from 'xstate/lib/model';
 
 const uploadModel = createModel(
@@ -6,29 +7,86 @@ const uploadModel = createModel(
 	},
 	{
 		events: {
-			SELECT_FILE: (file: File) => ({ file })
+			SELECT_FILE: (file: File) => ({ file }),
+
+			CANCEL_PROCEDURE_CREATION: () => ({}),
+
+			CREATE_PROCEDURE: () => ({})
 		}
 	}
 );
 
-export const uploadMachine = uploadModel.createMachine({
-	context: uploadModel.initialContext,
-
-	initial: 'selectingFile',
-
-	states: {
-		selectingFile: {},
-
-		selectedFile: {}
+const assignSelectedFile = uploadModel.assign(
+	{
+		selectedFile: (_, { file }) => file
 	},
+	'SELECT_FILE'
+);
 
-	on: {
-		SELECT_FILE: {
-			target: 'selectedFile',
+const resetSelectedFile = uploadModel.assign(
+	{
+		selectedFile: undefined
+	},
+	'CANCEL_PROCEDURE_CREATION'
+);
 
-			actions: uploadModel.assign({
-				selectedFile: (_, { file }) => file
-			})
+export const uploadMachine = uploadModel.createMachine(
+	{
+		context: uploadModel.initialContext,
+
+		initial: 'selectingFile',
+
+		states: {
+			selectingFile: {
+				on: {
+					SELECT_FILE: {
+						target: 'selectedFile',
+
+						actions: assignSelectedFile
+					}
+				}
+			},
+
+			selectedFile: {
+				on: {
+					SELECT_FILE: {
+						target: 'selectedFile',
+
+						actions: assignSelectedFile
+					},
+
+					CANCEL_PROCEDURE_CREATION: {
+						target: 'selectingFile',
+
+						actions: resetSelectedFile
+					},
+
+					CREATE_PROCEDURE: {
+						target: 'creatingProcedure'
+					}
+				}
+			},
+
+			creatingProcedure: {
+				invoke: {
+					src: 'createProcedure'
+				}
+			}
+		}
+	},
+	{
+		services: {
+			createProcedure:
+				({ selectedFile }) =>
+				async (sendBack) => {
+					if (selectedFile === undefined) {
+						throw new Error('Can not create a procedure with an undefined document');
+					}
+
+					const { documentURL, procedureUuid } = await createProcedure(selectedFile);
+
+					console.log('document url, procedure uuid', documentURL, procedureUuid);
+				}
 		}
 	}
-});
+);
