@@ -1,18 +1,6 @@
 version: "3.7"
 
 services:
-  minio:
-    image: "minio/minio"
-    command: server /data --address ":9100" --console-address ":9101"
-    ports:
-      - "9100:9100"
-      - "9101:9101"
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
-    volumes:
-      - "minio_data:/data"
-
   postgresql:
     container_name: temporal-postgresql
     environment:
