@@ -1,11 +1,18 @@
 <script>
 	import '../app.css';
+	import { goto } from '$app/navigation';
 	import { provideAppContext } from '$lib/contexts/app';
 
-	provideAppContext();
+	provideAppContext({
+		actions: {
+			redirectToViewerPage: () => {
+				goto('/viewer');
+			}
+		}
+	});
 </script>
 
-<div class="min-h-screen bg-white">
+<div class="min-h-screen bg-white flex flex-col">
 	<nav class="bg-white border-b border-gray-200">
 		<div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
 			<div class="flex items-center justify-between h-16">
@@ -23,7 +30,7 @@
 		</div>
 	</nav>
 
-	<div class="py-10">
+	<div class="py-10 flex-grow flex flex-col">
 		<slot />
 	</div>
 </div>

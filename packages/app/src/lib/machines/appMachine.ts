@@ -1,9 +1,14 @@
-import { createProcedure } from '$lib/services/procedure';
+import { createProcedure, fetchProcedureStatus } from '$lib/services/procedure';
 import { createModel } from 'xstate/lib/model';
+import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/interfaces';
 
 const appModel = createModel(
 	{
-		selectedFile: undefined as File | undefined
+		selectedFile: undefined as File | undefined,
+
+		documentUrl: undefined as string | undefined,
+		procedureUuid: undefined as string | undefined,
+		procedureStatus: undefined as ElectronicSignatureProcedureStatus | undefined
 	},
 	{
 		events: {
@@ -11,7 +16,16 @@ const appModel = createModel(
 
 			CANCEL_PROCEDURE_CREATION: () => ({}),
 
-			CREATE_PROCEDURE: () => ({})
+			CREATE_PROCEDURE: () => ({}),
+
+			PROCEDURE_CREATED: (documentUrl: string, procedureUuid: string) => ({
+				documentUrl,
+				procedureUuid
+			}),
+
+			SET_PROCEDURE_STATUS: (procedureStatus: ElectronicSignatureProcedureStatus) => ({
+				procedureStatus
+			})
 		}
 	}
 );
@@ -28,6 +42,21 @@ const resetSelectedFile = appModel.assign(
 		selectedFile: undefined
 	},
 	'CANCEL_PROCEDURE_CREATION'
+);
+
+const assignProcedureCreated = appModel.assign(
+	{
+		documentUrl: (_, { documentUrl }) => documentUrl,
+		procedureUuid: (_, { procedureUuid }) => procedureUuid
+	},
+	'PROCEDURE_CREATED'
+);
+
+const assignProcedureStatus = appModel.assign(
+	{
+		procedureStatus: (_, { procedureStatus }) => procedureStatus
+	},
+	'SET_PROCEDURE_STATUS'
 );
 
 export const appMachine = appModel.createMachine(
@@ -70,6 +99,53 @@ export const appMachine = appModel.createMachine(
 			creatingProcedure: {
 				invoke: {
 					src: 'createProcedure'
+				},
+
+				initial: 'idle',
+
+				states: {
+					idle: {
+						on: {
+							PROCEDURE_CREATED: {
+								target: 'pollingProcedureStatus',
+
+								actions: [assignProcedureCreated, 'redirectToViewerPage']
+							}
+						}
+					},
+
+					pollingProcedureStatus: {
+						initial: 'fetchingProcedureStatus',
+
+						states: {
+							fetchingProcedureStatus: {
+								invoke: {
+									src: 'fetchProcedureStatus'
+								},
+
+								on: {
+									SET_PROCEDURE_STATUS: {
+										target: 'deboucing',
+
+										actions: [
+											assignProcedureStatus,
+											(_, { procedureStatus }) => {
+												console.log('procedureStatus', procedureStatus);
+											}
+										]
+									}
+								}
+							},
+
+							deboucing: {
+								after: {
+									1_000: {
+										target: 'fetchingProcedureStatus'
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -79,13 +155,44 @@ export const appMachine = appModel.createMachine(
 			createProcedure:
 				({ selectedFile }) =>
 				async (sendBack) => {
-					if (selectedFile === undefined) {
-						throw new Error('Can not create a procedure with an undefined document');
+					try {
+						if (selectedFile === undefined) {
+							throw new Error('Can not create a procedure with an undefined document');
+						}
+
+						const { documentURL, procedureUuid } = await createProcedure(selectedFile);
+
+						console.log('document url, procedure uuid', documentURL, procedureUuid);
+
+						sendBack({
+							type: 'PROCEDURE_CREATED',
+							documentUrl: documentURL,
+							procedureUuid
+						});
+					} catch (err) {
+						console.error(err);
 					}
+				},
 
-					const { documentURL, procedureUuid } = await createProcedure(selectedFile);
+			fetchProcedureStatus:
+				({ procedureUuid }) =>
+				async (sendBack) => {
+					try {
+						if (procedureUuid === undefined) {
+							throw new Error(
+								'fetchProcedureStatus service can only be called when proceduire uuid has been set'
+							);
+						}
 
-					console.log('document url, procedure uuid', documentURL, procedureUuid);
+						const status = await fetchProcedureStatus(procedureUuid);
+
+						sendBack({
+							type: 'SET_PROCEDURE_STATUS',
+							procedureStatus: status
+						});
+					} catch (err) {
+						console.error(err);
+					}
 				}
 		}
 	}

@@ -2,7 +2,14 @@ import { appMachine } from '$lib/machines/appMachine';
 import { useMachine } from '@xstate/svelte';
 import { getContext, setContext } from 'svelte';
 import type { Readable } from 'svelte/store';
-import type { EventFrom, InterpreterFrom, Sender, StateFrom } from 'xstate';
+import type {
+	EventFrom,
+	InterpreterFrom,
+	Sender,
+	StateFrom,
+	MachineOptions,
+	ContextFrom
+} from 'xstate';
 
 const AppContextSymbol = Symbol('AppContextSymbol');
 
@@ -12,8 +19,10 @@ interface AppContext {
 	service: InterpreterFrom<typeof appMachine>;
 }
 
-export function provideAppContext(): void {
-	const appContext = useMachine(appMachine);
+export function provideAppContext(
+	config?: Partial<MachineOptions<ContextFrom<typeof appMachine>, EventFrom<typeof appMachine>>>
+): void {
+	const appContext = useMachine(appMachine, config);
 
 	setContext(AppContextSymbol, appContext);
 }
