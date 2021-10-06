@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { schema } from '@ioc:Adonis/Core/Validator'
 import { cuid } from '@ioc:Adonis/Core/Helpers'
+import Drive from '@ioc:Adonis/Core/Drive'
 import { Connection, WorkflowClient } from '@temporalio/client'
 import {
   ElectronicSignature,
@@ -11,6 +12,7 @@ export default class ElectronicSignaturesController {
   public async create({ request }: HttpContextContract): Promise<{
     procedureUuid: string
     documentURL: string
+    documentPresignedURL: string
   }> {
     const createProcedureSchema = schema.create({
       document: schema.file({
@@ -36,6 +38,9 @@ export default class ElectronicSignaturesController {
     return {
       documentURL: documentName,
       procedureUuid: handle.workflowId,
+      documentPresignedURL: await Drive.getSignedUrl(documentName, {
+        expiresIn: '30 minutes',
+      }),
     }
   }
 
