@@ -1,4 +1,5 @@
 import { sleep } from '@temporalio/workflow';
+import { msToNumber } from '@temporalio/common';
 import {
     createMachine,
     assign,
@@ -29,9 +30,6 @@ type ElectronicSignatureMachineEvents =
           type: 'PROCEDURE_TIMEOUT';
       }
     | {
-          type: 'WATCHED_DOCUMENT';
-      }
-    | {
           type: 'ACCEPT_DOCUMENT';
       }
     | {
@@ -60,7 +58,7 @@ const electronicSignatureMachine = createMachine<
 
         context: {
             sendingConfirmationCodeTries: 0,
-            procedureTimeout: 5_000,
+            procedureTimeout: msToNumber('1 minute'),
             confirmationCode: undefined,
         },
 
@@ -72,17 +70,9 @@ const electronicSignatureMachine = createMachine<
                     },
                 },
 
-                initial: 'watchingDocument',
+                initial: 'waitingAgreement',
 
                 states: {
-                    watchingDocument: {
-                        on: {
-                            WATCHED_DOCUMENT: {
-                                target: 'waitingAgreement',
-                            },
-                        },
-                    },
-
                     waitingAgreement: {
                         on: {
                             ACCEPT_DOCUMENT: {
@@ -286,12 +276,6 @@ export const electronicSignature: ElectronicSignature = () => {
         },
 
         signals: {
-            watchedDocument() {
-                send({
-                    type: 'WATCHED_DOCUMENT',
-                });
-            },
-
             acceptDocument() {
                 send({
                     type: 'ACCEPT_DOCUMENT',

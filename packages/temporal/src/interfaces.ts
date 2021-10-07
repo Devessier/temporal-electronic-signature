@@ -14,7 +14,6 @@ export type ElectronicSignature = () => {
         status(): ElectronicSignatureProcedureStatus;
     };
     signals: {
-        watchedDocument(): void;
         acceptDocument(): void;
         validateConfirmationCode(confirmationCode: string): void;
         resendConfirmationCode(): void;

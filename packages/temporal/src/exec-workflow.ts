@@ -39,7 +39,7 @@ async function run() {
         interactWithElectronicSignatureWorkflowMachine.withConfig({
             actions: {
                 sendWatchedDocument: () => {
-                    workflow.signal.watchedDocument();
+                    workflow.signal.acceptDocument();
                 },
             },
         }),
