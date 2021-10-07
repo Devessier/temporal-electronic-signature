@@ -27,3 +27,5 @@ Route.get('/procedure/:uuid', 'ElectronicSignaturesController.status')
 Route.post('/procedure/cancel/:uuid', 'ElectronicSignaturesController.cancelProcedure')
 
 Route.post('/procedure/agree/:uuid', 'ElectronicSignaturesController.agreeDocument')
+
+Route.post('/procedure/set-email-for-code/:uuid', 'ElectronicSignaturesController.setEmailForCode')

@@ -1,5 +1,5 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { schema } from '@ioc:Adonis/Core/Validator'
+import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { cuid } from '@ioc:Adonis/Core/Helpers'
 import Drive from '@ioc:Adonis/Core/Drive'
 import { Connection, WorkflowClient } from '@temporalio/client'
@@ -76,5 +76,19 @@ export default class ElectronicSignaturesController {
     const handle = client.createWorkflowHandle<ElectronicSignature>({ workflowId: procedureUuid })
 
     await handle.signal.acceptDocument()
+  }
+
+  public async setEmailForCode({ request }: HttpContextContract): Promise<void> {
+    const setEmailForCodeSchema = schema.create({
+      email: schema.string({}, [rules.email()]),
+    })
+    const procedureUuid = request.param('uuid')
+    const { email } = await request.validate({ schema: setEmailForCodeSchema })
+
+    const connection = new Connection()
+    const client = new WorkflowClient(connection.service)
+    const handle = client.createWorkflowHandle<ElectronicSignature>({ workflowId: procedureUuid })
+
+    await handle.signal.setEmailForCode(email)
   }
 }
