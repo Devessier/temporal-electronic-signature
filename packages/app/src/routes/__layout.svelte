@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { useAppContextProvider } from '$lib/contexts/app';
 
-	useAppContextProvider({
+	const { state } = useAppContextProvider({
 		actions: {
 			redirectToViewerPage: () => {
 				goto('/viewer');
@@ -13,11 +13,17 @@
 				goto('/signature-cancelled');
 			},
 
+			redirectToEmailPage: () => {
+				goto('/email');
+			},
+
 			redirectToConfirmationCodePage: () => {
 				goto('/confirmation-code');
 			}
 		}
 	});
+
+	$: console.log('state machine value', $state.value);
 </script>
 
 <div class="min-h-screen bg-white flex flex-col">

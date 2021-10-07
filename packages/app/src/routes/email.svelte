@@ -1,31 +1,35 @@
 <script lang="ts">
 	import AppLayout from '$lib/AppLayout.svelte';
+	import { useAppContext } from '$lib/contexts/app';
 
-	let code: string = '';
+	const { send } = useAppContext();
+
+	let emailAddress: string = '';
 
 	function handleSubmit() {
-		console.log('submit', code);
+		send({
+			type: 'SELECT_EMAIL',
+			email: emailAddress
+		});
 	}
 </script>
 
-<AppLayout title="Code received by email">
+<AppLayout title="Email for sending code">
 	<div class="flex items-center justify-center">
 		<div class="max-w-md w-full space-y-8">
 			<form class="mt-8 space-y-6" on:submit|preventDefault={handleSubmit}>
 				<div class="rounded-md shadow-sm -space-y-px">
 					<div>
-						<label for="code" class="sr-only">Code</label>
+						<label for="email-address" class="sr-only">Email address</label>
 						<input
-							id="code"
-							bind:value={code}
+							id="email-address"
+							bind:value={emailAddress}
 							name="email"
-							type="text"
-							autocomplete="one-time-code"
+							type="email"
+							autocomplete="email"
 							required
-							minlength="6"
-							maxlength="6"
 							class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-							placeholder="Code"
+							placeholder="Email address"
 						/>
 					</div>
 				</div>

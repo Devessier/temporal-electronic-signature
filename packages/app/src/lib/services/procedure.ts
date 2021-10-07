@@ -31,3 +31,15 @@ export async function cancelProcedure(procedureUuid: string): Promise<void> {
 export async function agreeDocument(procedureUuid: string): Promise<void> {
 	await redaxios.post(`http://localhost:3333/procedure/agree/${procedureUuid}`);
 }
+
+export async function setEmailForCode({
+	procedureUuid,
+	email
+}: {
+	procedureUuid: string;
+	email: string;
+}): Promise<void> {
+	await redaxios.post(`http://localhost:3333/procedure/set-email-for-code/${procedureUuid}`, {
+		email
+	});
+}

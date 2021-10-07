@@ -2,10 +2,12 @@ import {
 	agreeDocument,
 	cancelProcedure,
 	createProcedure,
-	fetchProcedureStatus
+	fetchProcedureStatus,
+	setEmailForCode
 } from '$lib/services/procedure';
 import { createModel } from 'xstate/lib/model';
 import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/interfaces';
+import { send } from 'xstate';
 
 const appModel = createModel(
 	{
@@ -37,12 +39,16 @@ const appModel = createModel(
 			SET_PROCEDURE_STATUS: (procedureStatus: ElectronicSignatureProcedureStatus) => ({
 				procedureStatus
 			}),
+			PROCEDURE_STATUS_FETCHING_FAILED: () => ({}),
 
 			CANCEL_SIGNATURE: () => ({}),
 			SIGNATURE_CANCELLED: () => ({}),
 
 			CONFIRM_SIGNATURE: () => ({}),
-			SIGNATURE_CONFIRMED: () => ({})
+			SIGNATURE_CONFIRMED: () => ({}),
+
+			SELECT_EMAIL: (email: string) => ({ email }),
+			EMAIL_SELECTION_CONFIRMED: () => ({})
 		}
 	}
 );
@@ -109,26 +115,12 @@ export const appMachine = appModel.createMachine(
 					},
 
 					CREATE_PROCEDURE: {
-						target: 'creatingProcedure'
+						target: 'signingDocumentSteps'
 					}
 				}
 			},
 
-			creatingProcedure: {
-				invoke: {
-					src: 'createProcedure'
-				},
-
-				on: {
-					PROCEDURE_CREATED: {
-						target: 'createdProcedure',
-
-						actions: [assignProcedureCreated, 'redirectToViewerPage']
-					}
-				}
-			},
-
-			createdProcedure: {
+			signingDocumentSteps: {
 				type: 'parallel',
 
 				states: {
@@ -142,20 +134,37 @@ export const appMachine = appModel.createMachine(
 								},
 
 								on: {
-									SET_PROCEDURE_STATUS: {
-										target: 'deboucing',
+									SET_PROCEDURE_STATUS: [
+										{
+											cond: (_, { procedureStatus }) => procedureStatus === 'CANCELLED',
 
-										actions: [
-											assignProcedureStatus,
-											(_, { procedureStatus }) => {
-												console.log('procedureStatus', procedureStatus);
-											}
-										]
+											actions: [
+												assignProcedureStatus,
+												send({
+													type: 'SIGNATURE_CANCELLED'
+												})
+											]
+										},
+
+										{
+											target: 'debouncing',
+
+											actions: [
+												assignProcedureStatus,
+												(_, { procedureStatus }) => {
+													console.log('procedureStatus', procedureStatus);
+												}
+											]
+										}
+									],
+
+									PROCEDURE_STATUS_FETCHING_FAILED: {
+										target: 'debouncing'
 									}
 								}
 							},
 
-							deboucing: {
+							debouncing: {
 								after: {
 									1_000: {
 										target: 'fetchingProcedureStatus'
@@ -165,46 +174,125 @@ export const appMachine = appModel.createMachine(
 						}
 					},
 
-					confirmingSignature: {
-						initial: 'idle',
+					steps: {
+						initial: 'creatingProcedure',
 
 						states: {
-							idle: {
-								on: {
-									CANCEL_SIGNATURE: {
-										target: 'sendingCancelSignature'
-									},
+							creatingProcedure: {
+								invoke: {
+									src: 'createProcedure'
+								},
 
-									CONFIRM_SIGNATURE: {
-										target: 'sendingConfirmSignature'
+								on: {
+									PROCEDURE_CREATED: {
+										target: 'confirmingSignature',
+
+										actions: [assignProcedureCreated, 'redirectToViewerPage']
 									}
 								}
 							},
 
-							sendingConfirmSignature: {
-								invoke: {
-									src: 'agreeDocument'
+							confirmingSignature: {
+								initial: 'idle',
+
+								states: {
+									idle: {
+										on: {
+											CANCEL_SIGNATURE: {
+												target: 'sendingCancelSignature'
+											},
+
+											CONFIRM_SIGNATURE: {
+												target: 'sendingConfirmSignature'
+											}
+										}
+									},
+
+									sendingConfirmSignature: {
+										invoke: {
+											src: 'agreeDocument'
+										}
+									},
+
+									sendingCancelSignature: {
+										invoke: {
+											src: 'cancelProcedure'
+										}
+									}
 								},
 
 								on: {
 									SIGNATURE_CONFIRMED: {
+										target: 'selectingEmail',
+
+										actions: 'redirectToEmailPage'
+									}
+								}
+							},
+
+							selectingEmail: {
+								initial: 'idle',
+
+								states: {
+									idle: {
+										on: {
+											SELECT_EMAIL: {
+												target: 'sendingEmail'
+											}
+										}
+									},
+
+									sendingEmail: {
+										invoke: {
+											src: 'sendEmail'
+										}
+									}
+								},
+
+								on: {
+									EMAIL_SELECTION_CONFIRMED: {
+										target: 'confirmingCode',
+
 										actions: 'redirectToConfirmationCodePage'
 									}
 								}
 							},
 
-							sendingCancelSignature: {
-								invoke: {
-									src: 'cancelProcedure'
-								},
+							confirmingCode: {
+								initial: 'idle',
 
-								on: {
-									SIGNATURE_CANCELLED: {
-										actions: 'redirectToSignatureCanceledPage'
+								states: {
+									idle: {
+										// on: {
+										// 	SELECT_EMAIL: {
+										// 		target: 'sendingEmail'
+										// 	}
+										// }
 									}
+
+									// sendingEmail: {
+									// 	invoke: {
+									// 		src: 'sendEmail'
+									// 	},
+
+									// }
 								}
+
+								// on: {
+								// 	EMAIL_SELECTION_CONFIRMED: {
+								// 		target: ''
+								// 	}
+								// }
 							}
 						}
+					}
+				},
+
+				on: {
+					SIGNATURE_CANCELLED: {
+						target: 'selectingFile',
+
+						actions: 'redirectToSignatureCanceledPage'
 					}
 				}
 			}
@@ -255,6 +343,10 @@ export const appMachine = appModel.createMachine(
 						});
 					} catch (err) {
 						console.error(err);
+
+						sendBack({
+							type: 'PROCEDURE_STATUS_FETCHING_FAILED'
+						});
 					}
 				},
 
@@ -292,6 +384,32 @@ export const appMachine = appModel.createMachine(
 
 						sendBack({
 							type: 'SIGNATURE_CONFIRMED'
+						});
+					} catch (err) {
+						console.error(err);
+					}
+				},
+
+			sendEmail:
+				({ procedureUuid }, event) =>
+				async (sendBack) => {
+					try {
+						if (event.type != 'SELECT_EMAIL') {
+							throw new Error('invalid event');
+						}
+						if (procedureUuid === undefined) {
+							throw new Error(
+								'sendEmail service can only be called when proceduire uuid has been set'
+							);
+						}
+
+						await setEmailForCode({
+							procedureUuid,
+							email: event.email
+						});
+
+						sendBack({
+							type: 'EMAIL_SELECTION_CONFIRMED'
 						});
 					} catch (err) {
 						console.error(err);

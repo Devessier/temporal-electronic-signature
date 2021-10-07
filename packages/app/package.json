@@ -33,6 +33,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@tailwindcss/forms": "^0.3.4",
 		"@xstate/svelte": "^0.2.0",
 		"redaxios": "^0.4.1",
 		"xstate": "^4.25.0"
