@@ -14,9 +14,10 @@ import {
 } from '../interfaces';
 import type * as activities from '../activities';
 
-const { generateConfirmationCode } = createActivityHandle<typeof activities>({
-    startToCloseTimeout: '1 minute',
-});
+const { generateConfirmationCode, sendConfirmationCodeEmail } =
+    createActivityHandle<typeof activities>({
+        startToCloseTimeout: '1 minute',
+    });
 
 interface ElectronicSignatureMachineContext {
     procedureTimeout: number;
@@ -38,7 +39,6 @@ type ElectronicSignatureMachineEvents =
       }
     | {
           type: 'SENT_CONFIRMATION_CODE';
-          confirmationCode: string;
       }
     | {
           type: 'VALIDATE_CONFIRMATION_CODE';
@@ -123,8 +123,6 @@ const electronicSignatureMachine = createMachine<
                         on: {
                             SENT_CONFIRMATION_CODE: {
                                 target: 'waitingConfirmationCode',
-
-                                actions: 'assignConfirmationCode',
                             },
                         },
                     },
@@ -187,18 +185,29 @@ const electronicSignatureMachine = createMachine<
             },
 
             sendConfirmationCode:
-                ({ confirmationCode }) =>
-                (sendBack) => {
-                    console.log('send confirmation code', confirmationCode);
+                ({ confirmationCode, email }) =>
+                async (sendBack) => {
+                    try {
+                        if (
+                            confirmationCode === undefined ||
+                            email === undefined
+                        ) {
+                            throw new Error(
+                                'Confirmation code and email must be defined to send the confirmation code by email',
+                            );
+                        }
 
-                    setTimeout(() => {
-                        const confirmationCode = '918273';
+                        await sendConfirmationCodeEmail({
+                            confirmationCode,
+                            email,
+                        });
 
                         sendBack({
                             type: 'SENT_CONFIRMATION_CODE',
-                            confirmationCode,
                         });
-                    }, 500);
+                    } catch (err) {
+                        console.error(err);
+                    }
                 },
         },
 
@@ -226,14 +235,6 @@ const electronicSignatureMachine = createMachine<
                     assertEventType(event, 'SET_EMAIL');
 
                     return event.email;
-                },
-            }),
-
-            assignConfirmationCode: assign({
-                confirmationCode: (_, event) => {
-                    assertEventType(event, 'SENT_CONFIRMATION_CODE');
-
-                    return event.confirmationCode;
                 },
             }),
 

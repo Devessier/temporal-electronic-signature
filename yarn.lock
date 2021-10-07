@@ -2442,6 +2442,13 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-16.10.2.tgz#5764ca9aa94470adb4e1185fe2e9f19458992b2e"
   integrity sha512-zCclL4/rx+W5SQTzFs9wyvvyCwoK9QtBpratqz2IYJ3O8Umrn0m3nsTv0wQBk9sRGpvUe9CwPDrQFB10f1FIjQ==
 
+"@types/nodemailer@^6.4.4":
+  version "6.4.4"
+  resolved "https://registry.yarnpkg.com/@types/nodemailer/-/nodemailer-6.4.4.tgz#c265f7e7a51df587597b3a49a023acaf0c741f4b"
+  integrity sha512-Ksw4t7iliXeYGvIQcSIgWQ5BLuC/mljIEbjf615svhZL10PE9t+ei8O9gDaD3FPCasUJn9KTLwz2JFJyiiyuqw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.1.tgz#d3357479a0fdfdd5907fe67e17e0a85c906e1301"
@@ -7235,6 +7242,11 @@ node-repl-await@^0.1.2:
     acorn-static-class-features "^1.0.0"
     acorn-walk "^8.0.2"
 
+nodemailer@^6.6.5:
+  version "6.6.5"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.6.5.tgz#f9f6953cee5cfe82cbea152eeddacf7a0442049a"
+  integrity sha512-C/v856DBijUzHcHIgGpQoTrfsH3suKIRAGliIzCstatM2cAa+MYX3LuyCrABiO/cdJTxgBBHXxV1ztiqUwst5A==
+
 nodemon@^2.0.12:
   version "2.0.13"
   resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-2.0.13.tgz#67d40d3a4d5bd840aa785c56587269cfcf5d24aa"
@@ -10534,3 +10546,8 @@ youch@^2.2.2:
     cookie "^0.4.1"
     mustache "^4.2.0"
     stack-trace "0.0.10"
+
+zod@^3.9.8:
+  version "3.9.8"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.9.8.tgz#562eda33925203542dea70100ce0d3766d04b0ab"
+  integrity sha512-pTNhdJd45PPOBpdxO8x00Tv+HhknYGx3WdgFQndazp+G1Gd2Cxf81L5yMfCIIcd/SA3VqrcTv/G4bFcr+DsZhA==

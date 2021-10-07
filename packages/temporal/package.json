@@ -12,8 +12,10 @@
   },
   "devDependencies": {
     "@tsconfig/node14": "^1.0.0",
+    "@types/nodemailer": "^6.4.4",
     "@typescript-eslint/eslint-plugin": "^4.32.0",
     "@typescript-eslint/parser": "^4.32.0",
+    "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
@@ -28,13 +30,15 @@
     ],
     "ext": "ts",
     "execMap": {
-      "ts": "ts-node"
+      "ts": "ts-node -r dotenv/config"
     }
   },
   "dependencies": {
     "nanoid": "^3.1.29",
+    "nodemailer": "^6.6.5",
     "temporalio": "^0.4.3",
-    "xstate": "^4.25.0"
+    "xstate": "^4.25.0",
+    "zod": "^3.9.8"
   },
   "workspaces": {
     "nohoist": [
