@@ -38,9 +38,9 @@ export default class ElectronicSignaturesController {
     return {
       documentURL: documentName,
       procedureUuid: handle.workflowId,
-      documentPresignedURL: await Drive.getSignedUrl(documentName, {
+      documentPresignedURL: `http://localhost:3333${await Drive.getSignedUrl(documentName, {
         expiresIn: '30 minutes',
-      }),
+      })}`,
     }
   }
 

@@ -5,9 +5,7 @@
 
 	const { state, send } = useAppContext();
 
-	$: documentURL =
-		$state.context.documentUrl ||
-		`http://localhost:3333/uploads/ckug295zw0003a14z9uae0as3.pdf?signature=eyJtZXNzYWdlIjoiL3VwbG9hZHMvY2t1ZzI5NXp3MDAwM2ExNHo5dWFlMGFzMy5wZGYiLCJleHBpcnlEYXRlIjoiMjAyMS0xMC0wNlQyMjozNjozNy43NTBaIn0.Mlx04XZw-KwH5LZYUc9PgRtFRqhQy3TwrvbylkNCm0c`;
+	$: documentURL = $state.context.documentPresignedURL;
 
 	function handleCancelProcedureClick() {}
 

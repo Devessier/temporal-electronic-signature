@@ -6,7 +6,8 @@ const appModel = createModel(
 	{
 		selectedFile: undefined as File | undefined,
 
-		documentUrl: undefined as string | undefined,
+		documentURL: undefined as string | undefined,
+		documentPresignedURL: undefined as string | undefined,
 		procedureUuid: undefined as string | undefined,
 		procedureStatus: undefined as ElectronicSignatureProcedureStatus | undefined
 	},
@@ -18,8 +19,13 @@ const appModel = createModel(
 
 			CREATE_PROCEDURE: () => ({}),
 
-			PROCEDURE_CREATED: (documentUrl: string, procedureUuid: string) => ({
-				documentUrl,
+			PROCEDURE_CREATED: (
+				documentURL: string,
+				documentPresignedURL: string,
+				procedureUuid: string
+			) => ({
+				documentURL,
+				documentPresignedURL,
 				procedureUuid
 			}),
 
@@ -46,7 +52,8 @@ const resetSelectedFile = appModel.assign(
 
 const assignProcedureCreated = appModel.assign(
 	{
-		documentUrl: (_, { documentUrl }) => documentUrl,
+		documentURL: (_, { documentURL }) => documentURL,
+		documentPresignedURL: (_, { documentPresignedURL }) => documentPresignedURL,
 		procedureUuid: (_, { procedureUuid }) => procedureUuid
 	},
 	'PROCEDURE_CREATED'
@@ -160,13 +167,16 @@ export const appMachine = appModel.createMachine(
 							throw new Error('Can not create a procedure with an undefined document');
 						}
 
-						const { documentURL, procedureUuid } = await createProcedure(selectedFile);
+						const { documentURL, documentPresignedURL, procedureUuid } = await createProcedure(
+							selectedFile
+						);
 
 						console.log('document url, procedure uuid', documentURL, procedureUuid);
 
 						sendBack({
 							type: 'PROCEDURE_CREATED',
-							documentUrl: documentURL,
+							documentURL,
+							documentPresignedURL,
 							procedureUuid
 						});
 					} catch (err) {

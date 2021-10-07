@@ -4,6 +4,7 @@ import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-si
 interface CreateProcedureResponse {
 	procedureUuid: string;
 	documentURL: string;
+	documentPresignedURL: string
 }
 
 export async function createProcedure(document: File): Promise<CreateProcedureResponse> {
