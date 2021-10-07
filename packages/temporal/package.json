@@ -32,6 +32,7 @@
     }
   },
   "dependencies": {
+    "nanoid": "^3.1.29",
     "temporalio": "^0.4.3",
     "xstate": "^4.25.0"
   },

@@ -1,4 +1,4 @@
-import { sleep } from '@temporalio/workflow';
+import { createActivityHandle, sleep } from '@temporalio/workflow';
 import { msToNumber } from '@temporalio/common';
 import {
     createMachine,
@@ -12,12 +12,11 @@ import {
     ElectronicSignature,
     ElectronicSignatureProcedureStatus,
 } from '../interfaces';
-// Only import the activity types
-// import type * as activities from '../activities';
+import type * as activities from '../activities';
 
-// const { greet } = createActivityHandle<typeof activities>({
-//     startToCloseTimeout: '1 minute',
-// });
+const { generateConfirmationCode } = createActivityHandle<typeof activities>({
+    startToCloseTimeout: '1 minute',
+});
 
 interface ElectronicSignatureMachineContext {
     procedureTimeout: number;
@@ -90,7 +89,7 @@ const electronicSignatureMachine = createMachine<
                     waitingEmail: {
                         on: {
                             SET_EMAIL: {
-                                target: 'sendingConfirmationCode',
+                                target: 'generatingConfirmationCode',
 
                                 actions: [
                                     'assignEmail',
@@ -98,6 +97,20 @@ const electronicSignatureMachine = createMachine<
                                         console.log('waiting email', event);
                                     },
                                 ],
+                            },
+                        },
+                    },
+
+                    generatingConfirmationCode: {
+                        invoke: {
+                            src: 'generateConfirmationCode',
+
+                            onDone: {
+                                target: 'sendingConfirmationCode',
+
+                                actions: assign({
+                                    confirmationCode: (_, { data }) => data,
+                                }),
                             },
                         },
                     },
@@ -169,16 +182,24 @@ const electronicSignatureMachine = createMachine<
 
     {
         services: {
-            sendConfirmationCode: () => (sendBack) => {
-                setTimeout(() => {
-                    const confirmationCode = '918273';
-
-                    sendBack({
-                        type: 'SENT_CONFIRMATION_CODE',
-                        confirmationCode,
-                    });
-                }, 500);
+            generateConfirmationCode: async () => {
+                return await generateConfirmationCode();
             },
+
+            sendConfirmationCode:
+                ({ confirmationCode }) =>
+                (sendBack) => {
+                    console.log('send confirmation code', confirmationCode);
+
+                    setTimeout(() => {
+                        const confirmationCode = '918273';
+
+                        sendBack({
+                            type: 'SENT_CONFIRMATION_CODE',
+                            confirmationCode,
+                        });
+                    }, 500);
+                },
         },
 
         guards: {
@@ -281,6 +302,11 @@ export const electronicSignature: ElectronicSignature = () => {
                 }
                 if (state.matches('pendingSignature.waitingEmail')) {
                     return 'PENDING.WAITING_EMAIL';
+                }
+                if (
+                    state.matches('pendingSignature.generatingConfirmationCode')
+                ) {
+                    return 'PENDING.GENERATING_CONFIRMATION_CODE';
                 }
                 if (state.matches('pendingSignature.sendingConfirmationCode')) {
                     return 'PENDING.SENDING_CONFIRMATION_CODE';
