@@ -1,4 +1,9 @@
-import { createProcedure, fetchProcedureStatus } from '$lib/services/procedure';
+import {
+	agreeDocument,
+	cancelProcedure,
+	createProcedure,
+	fetchProcedureStatus
+} from '$lib/services/procedure';
 import { createModel } from 'xstate/lib/model';
 import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/interfaces';
 
@@ -31,7 +36,13 @@ const appModel = createModel(
 
 			SET_PROCEDURE_STATUS: (procedureStatus: ElectronicSignatureProcedureStatus) => ({
 				procedureStatus
-			})
+			}),
+
+			CANCEL_SIGNATURE: () => ({}),
+			SIGNATURE_CANCELLED: () => ({}),
+
+			CONFIRM_SIGNATURE: () => ({}),
+			SIGNATURE_CONFIRMED: () => ({})
 		}
 	}
 );
@@ -108,19 +119,19 @@ export const appMachine = appModel.createMachine(
 					src: 'createProcedure'
 				},
 
-				initial: 'idle',
+				on: {
+					PROCEDURE_CREATED: {
+						target: 'createdProcedure',
+
+						actions: [assignProcedureCreated, 'redirectToViewerPage']
+					}
+				}
+			},
+
+			createdProcedure: {
+				type: 'parallel',
 
 				states: {
-					idle: {
-						on: {
-							PROCEDURE_CREATED: {
-								target: 'pollingProcedureStatus',
-
-								actions: [assignProcedureCreated, 'redirectToViewerPage']
-							}
-						}
-					},
-
 					pollingProcedureStatus: {
 						initial: 'fetchingProcedureStatus',
 
@@ -148,6 +159,48 @@ export const appMachine = appModel.createMachine(
 								after: {
 									1_000: {
 										target: 'fetchingProcedureStatus'
+									}
+								}
+							}
+						}
+					},
+
+					confirmingSignature: {
+						initial: 'idle',
+
+						states: {
+							idle: {
+								on: {
+									CANCEL_SIGNATURE: {
+										target: 'sendingCancelSignature'
+									},
+
+									CONFIRM_SIGNATURE: {
+										target: 'sendingConfirmSignature'
+									}
+								}
+							},
+
+							sendingConfirmSignature: {
+								invoke: {
+									src: 'agreeDocument'
+								},
+
+								on: {
+									SIGNATURE_CONFIRMED: {
+										actions: 'redirectToConfirmationCodePage'
+									}
+								}
+							},
+
+							sendingCancelSignature: {
+								invoke: {
+									src: 'cancelProcedure'
+								},
+
+								on: {
+									SIGNATURE_CANCELLED: {
+										actions: 'redirectToSignatureCanceledPage'
 									}
 								}
 							}
@@ -199,6 +252,46 @@ export const appMachine = appModel.createMachine(
 						sendBack({
 							type: 'SET_PROCEDURE_STATUS',
 							procedureStatus: status
+						});
+					} catch (err) {
+						console.error(err);
+					}
+				},
+
+			cancelProcedure:
+				({ procedureUuid }) =>
+				async (sendBack) => {
+					try {
+						if (procedureUuid === undefined) {
+							throw new Error(
+								'cancelProcedure service can only be called when proceduire uuid has been set'
+							);
+						}
+
+						await cancelProcedure(procedureUuid);
+
+						sendBack({
+							type: 'SIGNATURE_CANCELLED'
+						});
+					} catch (err) {
+						console.error(err);
+					}
+				},
+
+			agreeDocument:
+				({ procedureUuid }) =>
+				async (sendBack) => {
+					try {
+						if (procedureUuid === undefined) {
+							throw new Error(
+								'agreeDocument service can only be called when proceduire uuid has been set'
+							);
+						}
+
+						await agreeDocument(procedureUuid);
+
+						sendBack({
+							type: 'SIGNATURE_CONFIRMED'
 						});
 					} catch (err) {
 						console.error(err);

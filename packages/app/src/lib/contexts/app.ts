@@ -19,12 +19,14 @@ interface AppContext {
 	service: InterpreterFrom<typeof appMachine>;
 }
 
-export function provideAppContext(
+export function useAppContextProvider(
 	config?: Partial<MachineOptions<ContextFrom<typeof appMachine>, EventFrom<typeof appMachine>>>
-): void {
+): AppContext {
 	const appContext = useMachine(appMachine, config);
 
 	setContext(AppContextSymbol, appContext);
+
+	return appContext;
 }
 
 export function useAppContext(): AppContext {

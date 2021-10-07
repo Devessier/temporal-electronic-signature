@@ -7,9 +7,17 @@
 
 	$: documentURL = $state.context.documentPresignedURL;
 
-	function handleCancelProcedureClick() {}
+	function handleCancelProcedureClick() {
+		send({
+			type: 'CANCEL_SIGNATURE'
+		});
+	}
 
-	function handleConfirmProcedureClick() {}
+	function handleConfirmProcedureClick() {
+		send({
+			type: 'CONFIRM_SIGNATURE'
+		});
+	}
 </script>
 
 <AppLayout title="Sign document">

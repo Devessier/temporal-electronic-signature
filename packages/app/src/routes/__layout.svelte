@@ -1,12 +1,20 @@
 <script>
 	import '../app.css';
 	import { goto } from '$app/navigation';
-	import { provideAppContext } from '$lib/contexts/app';
+	import { useAppContextProvider } from '$lib/contexts/app';
 
-	provideAppContext({
+	useAppContextProvider({
 		actions: {
 			redirectToViewerPage: () => {
 				goto('/viewer');
+			},
+
+			redirectToSignatureCanceledPage: () => {
+				goto('/signature-cancelled');
+			},
+
+			redirectToConfirmationCodePage: () => {
+				goto('/confirmation-code');
 			}
 		}
 	});
