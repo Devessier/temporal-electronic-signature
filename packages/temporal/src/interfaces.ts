@@ -1,7 +1,7 @@
 export type ElectronicSignatureProcedureStatus =
     | `PENDING.${
-          | 'WATCHING_DOCUMENT'
           | 'WAITING_AGREEMENT'
+          | 'WAITING_EMAIL'
           | 'SENDING_CONFIRMATION_CODE'
           | 'WAITING_CONFIRMATION_CODE'}`
     | 'EXPIRED'
@@ -15,6 +15,7 @@ export type ElectronicSignature = () => {
     };
     signals: {
         acceptDocument(): void;
+        setEmailForCode(email: string): void;
         validateConfirmationCode(confirmationCode: string): void;
         resendConfirmationCode(): void;
         cancelProcedure(): void;

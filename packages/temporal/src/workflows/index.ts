@@ -21,6 +21,7 @@ import {
 
 interface ElectronicSignatureMachineContext {
     procedureTimeout: number;
+    email: string | undefined;
     sendingConfirmationCodeTries: number;
     confirmationCode: string | undefined;
 }
@@ -31,6 +32,10 @@ type ElectronicSignatureMachineEvents =
       }
     | {
           type: 'ACCEPT_DOCUMENT';
+      }
+    | {
+          type: 'SET_EMAIL';
+          email: string;
       }
     | {
           type: 'SENT_CONFIRMATION_CODE';
@@ -59,6 +64,7 @@ const electronicSignatureMachine = createMachine<
         context: {
             sendingConfirmationCodeTries: 0,
             procedureTimeout: msToNumber('1 minute'),
+            email: undefined,
             confirmationCode: undefined,
         },
 
@@ -76,7 +82,22 @@ const electronicSignatureMachine = createMachine<
                     waitingAgreement: {
                         on: {
                             ACCEPT_DOCUMENT: {
+                                target: 'waitingEmail',
+                            },
+                        },
+                    },
+
+                    waitingEmail: {
+                        on: {
+                            SET_EMAIL: {
                                 target: 'sendingConfirmationCode',
+
+                                actions: [
+                                    'assignEmail',
+                                    (_, event) => {
+                                        console.log('waiting email', event);
+                                    },
+                                ],
                             },
                         },
                     },
@@ -179,6 +200,14 @@ const electronicSignatureMachine = createMachine<
                 }) => sendingConfirmationCodeTries + 1,
             }),
 
+            assignEmail: assign({
+                email: (_, event) => {
+                    assertEventType(event, 'SET_EMAIL');
+
+                    return event.email;
+                },
+            }),
+
             assignConfirmationCode: assign({
                 confirmationCode: (_, event) => {
                     assertEventType(event, 'SENT_CONFIRMATION_CODE');
@@ -247,11 +276,11 @@ export const electronicSignature: ElectronicSignature = () => {
 
         queries: {
             status(): ElectronicSignatureProcedureStatus {
-                if (state.matches('pendingSignature.watchingDocument')) {
-                    return 'PENDING.WATCHING_DOCUMENT';
-                }
                 if (state.matches('pendingSignature.waitingAgreement')) {
                     return 'PENDING.WAITING_AGREEMENT';
+                }
+                if (state.matches('pendingSignature.waitingEmail')) {
+                    return 'PENDING.WAITING_EMAIL';
                 }
                 if (state.matches('pendingSignature.sendingConfirmationCode')) {
                     return 'PENDING.SENDING_CONFIRMATION_CODE';
@@ -279,6 +308,13 @@ export const electronicSignature: ElectronicSignature = () => {
             acceptDocument() {
                 send({
                     type: 'ACCEPT_DOCUMENT',
+                });
+            },
+
+            setEmailForCode(email: string) {
+                send({
+                    type: 'SET_EMAIL',
+                    email,
                 });
             },
 
