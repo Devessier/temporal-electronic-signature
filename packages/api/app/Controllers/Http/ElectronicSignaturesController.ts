@@ -57,4 +57,24 @@ export default class ElectronicSignaturesController {
 
     return status
   }
+
+  public async cancelProcedure({ request }: HttpContextContract): Promise<void> {
+    const procedureUuid = request.param('uuid')
+
+    const connection = new Connection()
+    const client = new WorkflowClient(connection.service)
+    const handle = client.createWorkflowHandle<ElectronicSignature>({ workflowId: procedureUuid })
+
+    await handle.signal.cancelProcedure()
+  }
+
+  public async agreeDocument({ request }: HttpContextContract): Promise<void> {
+    const procedureUuid = request.param('uuid')
+
+    const connection = new Connection()
+    const client = new WorkflowClient(connection.service)
+    const handle = client.createWorkflowHandle<ElectronicSignature>({ workflowId: procedureUuid })
+
+    await handle.signal.acceptDocument()
+  }
 }

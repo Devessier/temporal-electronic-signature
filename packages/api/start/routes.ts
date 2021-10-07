@@ -23,3 +23,7 @@ import Route from '@ioc:Adonis/Core/Route'
 Route.post('/procedure/create', 'ElectronicSignaturesController.create')
 
 Route.get('/procedure/:uuid', 'ElectronicSignaturesController.status')
+
+Route.post('/procedure/cancel/:uuid', 'ElectronicSignaturesController.cancelProcedure')
+
+Route.post('/procedure/agree/:uuid', 'ElectronicSignaturesController.agreeDocument')
