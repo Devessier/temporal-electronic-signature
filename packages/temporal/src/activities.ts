@@ -25,25 +25,31 @@ export async function sendConfirmationCodeEmail({
     confirmationCode: string;
     email: string;
 }): Promise<void> {
-    const mailer = createTransport({
-        host: Env.EMAIL_HOST,
-        port: Env.EMAIL_PORT,
-        secure: Boolean(Env.EMAIL_SECURE),
-        auth: {
-            user: Env.EMAIL_AUTH_USER,
-            pass: Env.EMAIL_AUTH_PASS,
-        },
-        tls: {
-            ciphers: 'SSLv3',
-        },
-    } as any);
+    try {
+        const mailer = createTransport({
+            host: Env.EMAIL_HOST,
+            port: Env.EMAIL_PORT,
+            secure: Env.EMAIL_SECURE === 'true',
+            auth: {
+                user: Env.EMAIL_AUTH_USER,
+                pass: Env.EMAIL_AUTH_PASS,
+            },
+            tls: {
+                ciphers: 'SSLv3',
+            },
+        } as any);
 
-    await mailer.sendMail({
-        from: '"Temporal Electronic Signature" <baptiste@devessier.fr>',
-        to: email,
-        subject: 'Electronic Signature - Confirmation Code',
-        text: `
-            The code to confirm the electronic signature is: ${confirmationCode}.
-        `,
-    });
+        await mailer.sendMail({
+            from: '"Temporal Electronic Signature" <baptiste@devessier.fr>',
+            to: email,
+            subject: 'Electronic Signature - Confirmation Code',
+            text: `
+                The code to confirm the electronic signature is: ${confirmationCode}.
+            `,
+        });
+    } catch (err) {
+        console.error('sending confirmation code email activity error', err);
+
+        throw err;
+    }
 }
