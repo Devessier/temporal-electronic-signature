@@ -91,4 +91,18 @@ export default class ElectronicSignaturesController {
 
     await handle.signal.setEmailForCode(email)
   }
+
+  public async sendConfirmationCode({ request }: HttpContextContract): Promise<void> {
+    const sendConfirmationCodeSchema = schema.create({
+      code: schema.string({}, [rules.minLength(6), rules.maxLength(6)]),
+    })
+    const procedureUuid = request.param('uuid')
+    const { code } = await request.validate({ schema: sendConfirmationCodeSchema })
+
+    const connection = new Connection()
+    const client = new WorkflowClient(connection.service)
+    const handle = client.createWorkflowHandle<ElectronicSignature>({ workflowId: procedureUuid })
+
+    await handle.signal.validateConfirmationCode(code)
+  }
 }

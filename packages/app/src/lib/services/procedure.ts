@@ -43,3 +43,15 @@ export async function setEmailForCode({
 		email
 	});
 }
+
+export async function sendConfirmationCode({
+	procedureUuid,
+	code
+}: {
+	procedureUuid: string;
+	code: string;
+}): Promise<void> {
+	await redaxios.post(`http://localhost:3333/procedure/confirmation-code/${procedureUuid}`, {
+		code
+	});
+}

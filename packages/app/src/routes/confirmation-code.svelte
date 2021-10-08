@@ -1,10 +1,16 @@
 <script lang="ts">
 	import AppLayout from '$lib/AppLayout.svelte';
+	import { useAppContext } from '$lib/contexts/app';
+
+	const { send } = useAppContext();
 
 	let code: string = '';
 
 	function handleSubmit() {
-		console.log('submit', code);
+		send({
+			type: 'SELECT_CODE',
+			code
+		});
 	}
 </script>
 

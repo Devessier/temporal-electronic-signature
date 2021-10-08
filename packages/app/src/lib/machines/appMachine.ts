@@ -3,11 +3,13 @@ import {
 	cancelProcedure,
 	createProcedure,
 	fetchProcedureStatus,
+	sendConfirmationCode,
 	setEmailForCode
 } from '$lib/services/procedure';
 import { createModel } from 'xstate/lib/model';
 import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/interfaces';
 import { send } from 'xstate';
+import type { EventObject } from 'xstate';
 
 const appModel = createModel(
 	{
@@ -48,7 +50,9 @@ const appModel = createModel(
 			SIGNATURE_CONFIRMED: () => ({}),
 
 			SELECT_EMAIL: (email: string) => ({ email }),
-			EMAIL_SELECTION_CONFIRMED: () => ({})
+			EMAIL_SELECTION_CONFIRMED: () => ({}),
+
+			SELECT_CODE: (code: string) => ({ code })
 		}
 	}
 );
@@ -263,19 +267,18 @@ export const appMachine = appModel.createMachine(
 
 								states: {
 									idle: {
-										// on: {
-										// 	SELECT_EMAIL: {
-										// 		target: 'sendingEmail'
-										// 	}
-										// }
+										on: {
+											SELECT_CODE: {
+												target: 'sendingCode'
+											}
+										}
+									},
+
+									sendingCode: {
+										invoke: {
+											src: 'sendCode'
+										}
 									}
-
-									// sendingEmail: {
-									// 	invoke: {
-									// 		src: 'sendEmail'
-									// 	},
-
-									// }
 								}
 
 								// on: {
@@ -394,9 +397,8 @@ export const appMachine = appModel.createMachine(
 				({ procedureUuid }, event) =>
 				async (sendBack) => {
 					try {
-						if (event.type != 'SELECT_EMAIL') {
-							throw new Error('invalid event');
-						}
+						assertEventType(event, 'SELECT_EMAIL');
+
 						if (procedureUuid === undefined) {
 							throw new Error(
 								'sendEmail service can only be called when proceduire uuid has been set'
@@ -414,7 +416,41 @@ export const appMachine = appModel.createMachine(
 					} catch (err) {
 						console.error(err);
 					}
+				},
+
+			sendCode:
+				({ procedureUuid }, event) =>
+				async (sendBack) => {
+					try {
+						assertEventType(event, 'SELECT_CODE');
+
+						if (procedureUuid === undefined) {
+							throw new Error(
+								'sendEmail service can only be called when proceduire uuid has been set'
+							);
+						}
+
+						await sendConfirmationCode({
+							procedureUuid,
+							code: event.code
+						});
+
+						sendBack({
+							type: 'EMAIL_SELECTION_CONFIRMED'
+						});
+					} catch (err) {
+						console.error(err);
+					}
 				}
 		}
 	}
 );
+
+function assertEventType<TE extends EventObject, TType extends TE['type']>(
+	event: TE,
+	eventType: TType
+): asserts event is TE & { type: TType } {
+	if (event.type !== eventType) {
+		throw new Error(`Invalid event: expected "${eventType}", got "${event.type}"`);
+	}
+}
