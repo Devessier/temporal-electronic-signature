@@ -24,6 +24,18 @@ export function useAppContextProvider(
 ): AppContext {
 	const appContext = useMachine(appMachine, config);
 
+	// To prevent issues where state machine would be stopped
+	// because the store has been unsubscribed by the previous page
+	// while going to another page, we keep a subscriber alive for
+	// all the navigation.
+	appContext.state.subscribe(({ value }) => {
+		console.log('state machine value', value);
+	});
+
+	appContext.service.onStop(() => {
+		console.log('machine stopped');
+	});
+
 	setContext(AppContextSymbol, appContext);
 
 	return appContext;

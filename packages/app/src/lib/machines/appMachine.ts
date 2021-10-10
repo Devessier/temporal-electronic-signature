@@ -52,7 +52,10 @@ const appModel = createModel(
 			SELECT_EMAIL: (email: string) => ({ email }),
 			EMAIL_SELECTION_CONFIRMED: () => ({}),
 
-			SELECT_CODE: (code: string) => ({ code })
+			SELECT_CODE: (code: string) => ({ code }),
+
+			SIGNATURE_VALIDATED: () => ({}),
+			SIGNATURE_EXPIRED: () => ({})
 		}
 	}
 );
@@ -146,6 +149,28 @@ export const appMachine = appModel.createMachine(
 												assignProcedureStatus,
 												send({
 													type: 'SIGNATURE_CANCELLED'
+												})
+											]
+										},
+
+										{
+											cond: (_, { procedureStatus }) => procedureStatus === 'VALIDATED',
+
+											actions: [
+												assignProcedureStatus,
+												send({
+													type: 'SIGNATURE_VALIDATED'
+												})
+											]
+										},
+
+										{
+											cond: (_, { procedureStatus }) => procedureStatus === 'EXPIRED',
+
+											actions: [
+												assignProcedureStatus,
+												send({
+													type: 'SIGNATURE_EXPIRED'
 												})
 											]
 										},
@@ -266,26 +291,20 @@ export const appMachine = appModel.createMachine(
 								initial: 'idle',
 
 								states: {
-									idle: {
-										on: {
-											SELECT_CODE: {
-												target: 'sendingCode'
-											}
-										}
-									},
+									idle: {},
 
 									sendingCode: {
 										invoke: {
 											src: 'sendCode'
 										}
 									}
-								}
+								},
 
-								// on: {
-								// 	EMAIL_SELECTION_CONFIRMED: {
-								// 		target: ''
-								// 	}
-								// }
+								on: {
+									SELECT_CODE: {
+										target: 'confirmingCode.sendingCode'
+									}
+								}
 							}
 						}
 					}
@@ -295,7 +314,19 @@ export const appMachine = appModel.createMachine(
 					SIGNATURE_CANCELLED: {
 						target: 'selectingFile',
 
-						actions: 'redirectToSignatureCanceledPage'
+						actions: 'redirectToSignatureCancelledPage'
+					},
+
+					SIGNATURE_VALIDATED: {
+						target: 'selectingFile',
+
+						actions: 'redirectToSignatureValidatedPage'
+					},
+
+					SIGNATURE_EXPIRED: {
+						target: 'selectingFile',
+
+						actions: 'redirectToSignatureExpiredPage'
 					}
 				}
 			}
@@ -420,7 +451,7 @@ export const appMachine = appModel.createMachine(
 
 			sendCode:
 				({ procedureUuid }, event) =>
-				async (sendBack) => {
+				async () => {
 					try {
 						assertEventType(event, 'SELECT_CODE');
 
@@ -433,10 +464,6 @@ export const appMachine = appModel.createMachine(
 						await sendConfirmationCode({
 							procedureUuid,
 							code: event.code
-						});
-
-						sendBack({
-							type: 'EMAIL_SELECTION_CONFIRMED'
 						});
 					} catch (err) {
 						console.error(err);

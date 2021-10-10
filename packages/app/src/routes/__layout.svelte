@@ -3,14 +3,22 @@
 	import { goto } from '$app/navigation';
 	import { useAppContextProvider } from '$lib/contexts/app';
 
-	const { state } = useAppContextProvider({
+	useAppContextProvider({
 		actions: {
 			redirectToViewerPage: () => {
 				goto('/viewer');
 			},
 
-			redirectToSignatureCanceledPage: () => {
+			redirectToSignatureCancelledPage: () => {
 				goto('/signature-cancelled');
+			},
+
+			redirectToSignatureValidatedPage: () => {
+				goto('/signature-validated');
+			},
+
+			redirectToSignatureExpiredPage: () => {
+				goto('/signature-expired');
 			},
 
 			redirectToEmailPage: () => {
@@ -22,8 +30,6 @@
 			}
 		}
 	});
-
-	$: console.log('state machine value', $state.value);
 </script>
 
 <div class="min-h-screen bg-white flex flex-col">
