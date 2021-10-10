@@ -22,7 +22,8 @@ export default class ElectronicSignaturesController {
     })
     const { document } = await request.validate({ schema: createProcedureSchema })
 
-    const documentName = `${cuid()}.pdf`
+    const documentId = cuid()
+    const documentName = `${documentId}.pdf`
     await document.moveToDisk('./', {
       name: documentName,
       contentType: 'application/pdf',
@@ -33,14 +34,14 @@ export default class ElectronicSignaturesController {
     const handle = client.createWorkflowHandle<ElectronicSignature>('electronicSignature', {
       taskQueue: 'electronic-signature',
     })
-    await handle.start() // kick off the purchase async
+    await handle.start({
+      documentId,
+    })
 
     return {
       documentURL: documentName,
       procedureUuid: handle.workflowId,
-      documentPresignedURL: `http://localhost:3333${await Drive.getSignedUrl(documentName, {
-        expiresIn: '30 minutes',
-      })}`,
+      documentPresignedURL: `http://localhost:3333${await Drive.getSignedUrl(documentName)}`,
     }
   }
 

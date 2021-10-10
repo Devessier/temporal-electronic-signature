@@ -33,7 +33,9 @@ async function run() {
     const workflow = client.createWorkflowHandle(electronicSignature, {
         taskQueue: 'electronic-signature',
     });
-    await workflow.start();
+    await workflow.start({
+        documentId: 'fake',
+    });
 
     const service = interpret(
         interactWithElectronicSignatureWorkflowMachine.withConfig({

@@ -9,7 +9,11 @@ export type ElectronicSignatureProcedureStatus =
     | 'VALIDATED'
     | 'CANCELLED';
 
-export type ElectronicSignature = () => {
+interface ElectronicSignatureArgs {
+    documentId: string;
+}
+
+export type ElectronicSignature = (args: ElectronicSignatureArgs) => {
     execute(): Promise<string>;
     queries: {
         status(): ElectronicSignatureProcedureStatus;
