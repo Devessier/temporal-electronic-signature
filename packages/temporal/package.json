@@ -34,9 +34,11 @@
     }
   },
   "dependencies": {
+    "got": "^11.8.2",
     "nanoid": "^3.1.29",
     "nodemailer": "^6.6.5",
     "temporalio": "^0.4.3",
+    "urlcat": "^2.0.4",
     "xstate": "^4.25.0",
     "zod": "^3.9.8"
   },

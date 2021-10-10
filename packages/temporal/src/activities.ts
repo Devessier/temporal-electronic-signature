@@ -1,6 +1,8 @@
 import { customAlphabet } from 'nanoid/async';
 import { createTransport } from 'nodemailer';
 import { z } from 'zod';
+import got from 'got';
+import urlcat from 'urlcat';
 
 const Env = z
     .object({
@@ -9,6 +11,8 @@ const Env = z
         EMAIL_SECURE: z.string(),
         EMAIL_AUTH_USER: z.string(),
         EMAIL_AUTH_PASS: z.string(),
+
+        API_URL: z.string().url(),
     })
     .parse(process.env);
 
@@ -52,4 +56,10 @@ export async function sendConfirmationCodeEmail({
 
         throw err;
     }
+}
+
+export async function stampDocument(documentId: string): Promise<void> {
+    const url = urlcat(Env.API_URL, `/procedure/stamp/${documentId}`);
+
+    await got.post(url);
 }

@@ -14,7 +14,7 @@ import {
 } from '../interfaces';
 import type * as activities from '../activities';
 
-const { generateConfirmationCode, sendConfirmationCodeEmail } =
+const { generateConfirmationCode, sendConfirmationCodeEmail, stampDocument } =
     createActivityHandle<typeof activities>({
         startToCloseTimeout: '1 minute',
     });
@@ -232,12 +232,16 @@ const createElectronicSignatureMachine = ({
                         }
                     },
 
-                signDocument: () => (sendBack) => {
-                    console.log('documentId to sign', documentId);
+                signDocument: () => async (sendBack) => {
+                    try {
+                        await stampDocument(documentId);
 
-                    sendBack({
-                        type: 'SIGNED_DOCUMENT',
-                    });
+                        sendBack({
+                            type: 'SIGNED_DOCUMENT',
+                        });
+                    } catch (err) {
+                        console.error(err);
+                    }
                 },
             },
 
