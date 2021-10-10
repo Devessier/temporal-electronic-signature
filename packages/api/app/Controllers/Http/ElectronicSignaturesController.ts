@@ -106,4 +106,34 @@ export default class ElectronicSignaturesController {
 
     await handle.signal.validateConfirmationCode(code)
   }
+
+  public async stampDocument({ request }: HttpContextContract): Promise<void> {
+    const procedureUuid = request.param('uuid')
+    const procedureDocumentPath = `./${procedureUuid}.pdf`
+    const procedureDocumentBuffer = await Drive.get(procedureDocumentPath)
+
+    const { PDFDocument, StandardFonts, rgb, degrees } = await import('pdf-lib')
+
+    const pdfDoc = await PDFDocument.load(procedureDocumentBuffer)
+
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
+    const pages = pdfDoc.getPages()
+
+    for (const page of pages) {
+      const { width, height } = page.getSize()
+
+      page.drawText('Temporal Node.js SDK', {
+        x: width / 2 - 175,
+        y: height / 2 + 200,
+        size: 50,
+        font: helveticaFont,
+        color: rgb(0.95, 0.1, 0.1),
+        rotate: degrees(-45),
+      })
+    }
+
+    const updatedDocumentBuffer = await pdfDoc.save()
+
+    await Drive.put(procedureDocumentPath, updatedDocumentBuffer as Buffer)
+  }
 }

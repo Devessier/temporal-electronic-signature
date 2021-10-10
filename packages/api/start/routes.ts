@@ -34,3 +34,5 @@ Route.post(
   '/procedure/confirmation-code/:uuid',
   'ElectronicSignaturesController.sendConfirmationCode'
 )
+
+Route.post('/procedure/stamp/:uuid', 'ElectronicSignaturesController.stampDocument')
