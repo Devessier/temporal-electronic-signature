@@ -354,6 +354,9 @@ export const electronicSignature: ElectronicSignature = ({ documentId }) => {
                 if (state.matches('pendingSignature.waitingConfirmationCode')) {
                     return 'PENDING.WAITING_CONFIRMATION_CODE';
                 }
+                if (state.matches('pendingSignature.signingDocument')) {
+                    return 'PENDING.SIGNING_DOCUMENT';
+                }
                 if (state.matches('procedureExpired')) {
                     return 'EXPIRED';
                 }

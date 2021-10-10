@@ -4,7 +4,8 @@ export type ElectronicSignatureProcedureStatus =
           | 'WAITING_EMAIL'
           | 'GENERATING_CONFIRMATION_CODE'
           | 'SENDING_CONFIRMATION_CODE'
-          | 'WAITING_CONFIRMATION_CODE'}`
+          | 'WAITING_CONFIRMATION_CODE'
+          | 'SIGNING_DOCUMENT'}`
     | 'EXPIRED'
     | 'VALIDATED'
     | 'CANCELLED';
