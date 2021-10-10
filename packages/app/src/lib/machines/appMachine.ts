@@ -71,7 +71,7 @@ const resetSelectedFile = appModel.assign(
 	{
 		selectedFile: undefined
 	},
-	'CANCEL_PROCEDURE_CREATION'
+	'SIGNATURE_VALIDATED'
 );
 
 const assignProcedureCreated = appModel.assign(
@@ -118,7 +118,7 @@ export const appMachine = appModel.createMachine(
 					CANCEL_PROCEDURE_CREATION: {
 						target: 'selectingFile',
 
-						actions: resetSelectedFile
+						actions: appModel.reset()
 					},
 
 					CREATE_PROCEDURE: {
@@ -314,19 +314,19 @@ export const appMachine = appModel.createMachine(
 					SIGNATURE_CANCELLED: {
 						target: 'selectingFile',
 
-						actions: 'redirectToSignatureCancelledPage'
+						actions: [appModel.reset(), 'redirectToSignatureCancelledPage']
 					},
 
 					SIGNATURE_VALIDATED: {
 						target: 'selectingFile',
 
-						actions: 'redirectToSignatureValidatedPage'
+						actions: [resetSelectedFile, 'redirectToSignatureValidatedPage']
 					},
 
 					SIGNATURE_EXPIRED: {
 						target: 'selectingFile',
 
-						actions: 'redirectToSignatureExpiredPage'
+						actions: [appModel.reset(), 'redirectToSignatureExpiredPage']
 					}
 				}
 			}
