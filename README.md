@@ -2,7 +2,7 @@
 
 Temporal Electronic Signature is a demonstration of Temporal Node.js SDK used with XState to write workflows. By implementing an electronic signature system, we have to use all most important features of Temporal: activities, signals, queries, timers. Thanks to XState, the code we have to write is more predictable and prevents race conditions to happen.
 
-![Demonstration of successful electronic signature](./assets/validated-signature.mp4)
+https://user-images.githubusercontent.com/29370468/136715088-f016acc4-dd5f-4153-8e1b-f63ff1e40c14.mp4
 
 ## What can be done with the application?
 
