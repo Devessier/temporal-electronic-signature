@@ -40,7 +40,7 @@ export async function sendConfirmationCodeEmail({
         } as any);
 
         await mailer.sendMail({
-            from: '"Temporal Electronic Signature" <baptiste@devessier.fr>',
+            from: '"Temporal Electronic Signature" <temporal@electronic-signature.com>',
             to: email,
             subject: 'Electronic Signature - Confirmation Code',
             text: `
