@@ -21,4 +21,10 @@ The application is built around three packages: `app`, `api` and `temporal`. The
 
 ### The Workflow
 
-[The workflow](https://github.com/Devessier/temporal-electronic-signature/tree/main/packages/temporal/src/workflows/index.ts) is impleted using [XState](https://xstate.js.org/docs/). XState is a library to create state machines in JavaScript. A state machine is an abstract machine that defines *states*, that can be in one state at a time, and that goes from one state to another one via *transitions*. Statecharts are an improvement of state machines that bring some interesting features, such as *hierarchical states*, *delayed transitions* or *service invokation*. These features are used in the workflow.
+[The workflow](https://github.com/Devessier/temporal-electronic-signature/tree/main/packages/temporal/src/workflows/index.ts) is impleted using [XState](https://xstate.js.org/docs/). XState is a library to create state machines in JavaScript. A state machine is a way to represent code with explicit *states*, that can be in one state at a time, and that goes from one state to another one via *transitions*. Statecharts are an improvement of state machines that bring some interesting features, such as *hierarchical states*, *delayed transitions* or *service invokation*. These features are used in the workflow.
+
+Let's see how the workflow is organized:
+
+<div style="padding-bottom: 56.25%; position: relative">
+<iframe src="https://stately.ai/viz/embed/1c8fd755-0e13-4912-9526-4c49e8140186?mode=viz&controls=1&pan=1&zoom=1" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%" />
+</div>
