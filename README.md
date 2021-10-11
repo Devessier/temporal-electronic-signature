@@ -23,8 +23,74 @@ The application is built around three packages: `app`, `api` and `temporal`. The
 
 [The workflow](https://github.com/Devessier/temporal-electronic-signature/tree/main/packages/temporal/src/workflows/index.ts) is impleted using [XState](https://xstate.js.org/docs/). XState is a library to create state machines in JavaScript. A state machine is a way to represent code with explicit *states*, that can be in one state at a time, and that goes from one state to another one via *transitions*. Statecharts are an improvement of state machines that bring some interesting features, such as *hierarchical states*, *delayed transitions* or *service invokation*. These features are used in the workflow.
 
-Let's see how the workflow is organized:
+Let's see how the workflow is organized with states. [Open the visualizer](https://stately.ai/viz/embed/1c8fd755-0e13-4912-9526-4c49e8140186?mode=viz&controls=1&pan=1&zoom=1)
 
-<div style="padding-bottom: 56.25%; position: relative">
-<iframe src="https://stately.ai/viz/embed/1c8fd755-0e13-4912-9526-4c49e8140186?mode=viz&controls=1&pan=1&zoom=1" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%" />
-</div>
+### Setup
+
+Those are the instructions to launch the signature system locally.
+
+Except `docker-compose` package, all commands will have to be executed in separate shells and kept alived.
+
+#### Dependencies
+
+First, let's install dependencies at the root of the repository.
+
+```sh
+yarn install
+```
+
+### Temporal
+
+We have to launch Temporal server and Temporal worker.
+
+#### Environment variables
+
+Go to `packages/temporal` directory, create a `.env` from `.env.example`.
+
+You will need credentials to authenticate to a SMTP server. You can use your [Gmail account credentials](https://www.hostinger.com/tutorials/how-to-use-free-google-smtp-server).
+
+#### Temporal server
+
+Execute the following command:
+
+```sh
+cd packages/docker-compose
+
+docker-compose up -d
+```
+
+#### Temporal worker
+
+Launch a Temporal worker:
+
+```sh
+cd packages/temporal
+
+yarn start.watch
+```
+
+### Back-end
+
+Go to `packages/api` directory, create a `.env` by copying `.env.example`.
+
+Then launch the API with the following command.
+
+```sh
+cd packages/api
+
+yarn dev
+```
+
+### Front-end
+
+Launch SvelteKit development server with the following command.
+
+```sh
+cd packages/app
+
+yarn dev
+```
+
+The front-end will then be accessible at http://localhost:3000.
+
+If not, check the URL printed in the logs.
