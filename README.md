@@ -47,7 +47,7 @@ We have to launch Temporal server and Temporal worker.
 
 Go to `packages/temporal` directory, create a `.env` from `.env.example`.
 
-You will need credentials to authenticate to a SMTP server. You can use your [Gmail account credentials](https://www.hostinger.com/tutorials/how-to-use-free-google-smtp-server).
+You will need credentials to authenticate to a SMTP server. If you do not have one, you can use your [Gmail account credentials](https://www.hostinger.com/tutorials/how-to-use-free-google-smtp-server). If you have enabled 2FA on your Google account, you might need [an additional step](https://stackoverflow.com/questions/26736062/sending-email-fails-when-two-factor-authentication-is-on-for-gmail/27130058#27130058).
 
 #### Temporal server
 
@@ -68,6 +68,11 @@ cd packages/temporal
 
 yarn start.watch
 ```
+
+If you encounter issues, such as `dyld: lazy symbol binding failed: Symbol not found`, try the following actions:
+
+- Install Node.js version 14
+- Install `node-gyp`: `npm install -g node-gyp`
 
 ### Back-end
 
