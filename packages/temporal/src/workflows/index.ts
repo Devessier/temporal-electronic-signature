@@ -1,18 +1,15 @@
-import { createActivityHandle, sleep } from '@temporalio/workflow';
-import { msToNumber } from '@temporalio/common';
 import {
-    createMachine,
-    assign,
-    EventObject,
-    interpret,
-    StateFrom,
-    Sender,
-} from 'xstate';
-import {
-    ElectronicSignature,
-    ElectronicSignatureProcedureStatus,
-} from '../interfaces';
+    createActivityHandle,
+    sleep,
+    defineQuery,
+    defineSignal,
+    setListener,
+} from '@temporalio/workflow';
+import ms from 'ms';
+import { createMachine, assign, interpret, StateFrom } from 'xstate';
 import type * as activities from '../activities';
+import { ElectronicSignatureProcedureStatus } from '../types';
+import { assertEventType } from '../utils/machine/events';
 
 const { generateConfirmationCode, sendConfirmationCodeEmail, stampDocument } =
     createActivityHandle<typeof activities>({
@@ -72,7 +69,7 @@ const createElectronicSignatureMachine = ({
 
             context: {
                 sendingConfirmationCodeTries: 0,
-                procedureTimeout: msToNumber('1 minute'),
+                procedureTimeout: ms('1 minute'),
                 email: undefined,
                 confirmationCode: undefined,
             },
@@ -283,128 +280,173 @@ const createElectronicSignatureMachine = ({
         },
     );
 
-function assertEventType<TE extends EventObject, TType extends TE['type']>(
-    event: TE,
-    eventType: TType,
-): asserts event is TE & { type: TType } {
-    if (event.type !== eventType) {
-        throw new Error(
-            `Invalid event: expected "${eventType}", got "${event.type}"`,
-        );
-    }
+interface ElectronicSignatureWorkflowArgs {
+    documentId: string;
 }
 
-export const electronicSignature: ElectronicSignature = ({ documentId }) => {
-    let state: StateFrom<typeof createElectronicSignatureMachine>;
-    let send: Sender<ElectronicSignatureMachineEvents>;
+export const statusQuery =
+    defineQuery<ElectronicSignatureProcedureStatus>('status');
 
-    return {
-        async execute(): Promise<string> {
-            const service = interpret(
-                createElectronicSignatureMachine({
-                    documentId,
-                }),
-                {
-                    clock: {
-                        setTimeout(fn, timeout) {
-                            sleep(timeout).then(fn);
-                        },
-                        clearTimeout() {
-                            return undefined;
-                        },
-                    },
-                },
-            )
-                .onTransition((updatedState) => {
-                    console.log('transition to', updatedState.value);
+export const acceptDocumentSignal = defineSignal('acceptDocument');
+export const setEmailForCodeSignal =
+    defineSignal<[{ email: string }]>('setEmailForCode');
+export const validateConfirmationCodeSignal = defineSignal<
+    [{ confirmationCode: string }]
+>('validateConfirmationCode');
+export const resendConfirmationCodeSignal = defineSignal(
+    'resendConfirmationCode',
+);
+export const cancelProcedureSignal = defineSignal('cancelProcedure');
 
-                    state = updatedState;
-                })
-                .start();
-            send = service.send.bind(service);
-
-            console.log('waiting for final state');
-            await new Promise((resolve) => {
-                service.onDone(() => {
-                    console.log('reached final state');
-
-                    resolve(undefined);
-                });
-            });
-
-            return 'electronic signature';
-        },
-
-        queries: {
-            status(): ElectronicSignatureProcedureStatus {
-                if (state.matches('pendingSignature.waitingAgreement')) {
-                    return 'PENDING.WAITING_AGREEMENT';
-                }
-                if (state.matches('pendingSignature.waitingEmail')) {
-                    return 'PENDING.WAITING_EMAIL';
-                }
-                if (
-                    state.matches('pendingSignature.generatingConfirmationCode')
-                ) {
-                    return 'PENDING.GENERATING_CONFIRMATION_CODE';
-                }
-                if (state.matches('pendingSignature.sendingConfirmationCode')) {
-                    return 'PENDING.SENDING_CONFIRMATION_CODE';
-                }
-                if (state.matches('pendingSignature.waitingConfirmationCode')) {
-                    return 'PENDING.WAITING_CONFIRMATION_CODE';
-                }
-                if (state.matches('pendingSignature.signingDocument')) {
-                    return 'PENDING.SIGNING_DOCUMENT';
-                }
-                if (state.matches('procedureExpired')) {
-                    return 'EXPIRED';
-                }
-                if (state.matches('procedureValidated')) {
-                    return 'VALIDATED';
-                }
-                if (state.matches('procedureCancelled')) {
-                    return 'CANCELLED';
-                }
-
-                throw new Error(
-                    'Reached unreachable state; a state has probably been added or renamed from the state machine',
-                );
+export async function electronicSignature({
+    documentId,
+}: ElectronicSignatureWorkflowArgs): Promise<ElectronicSignatureProcedureStatus> {
+    /**
+     * Create a custom machine with the documentId of the procedure.
+     */
+    const machine = createElectronicSignatureMachine({
+        documentId,
+    });
+    /**
+     * State holds the current state of the state machine.
+     */
+    let state = machine.initialState;
+    /**
+     * State machines created with `createMachine` do nothing by default.
+     * They are *representations* and you need an engine to make them become real.
+     * This is what `interpret` does.
+     * It puts the state machine in an engine that reads the configuration and execute all steps.
+     * The alive representation of the state machine is called a `service`.
+     */
+    const service = interpret(machine, {
+        /**
+         * Define a custom implementation of the clock used by XState to handle
+         * `delayed transitions`, that is transitions that occur after some time.
+         * By default it uses `setTimeout` and `clearTimeout`.
+         * Here we want to ditch the default implementation and use Temporal `sleep` function.
+         */
+        clock: {
+            setTimeout(fn, timeout) {
+                sleep(timeout).then(fn);
+            },
+            clearTimeout() {
+                return undefined;
             },
         },
+    });
+    /**
+     * For each transition, we keep track of the new state.
+     */
+    service.onTransition((updatedState) => {
+        state = updatedState;
+    });
+    /**
+     * Now that the service is configured, put the power on.
+     */
+    service.start();
+    /**
+     * Send is a function that is used to send events to the state machine.
+     * It is typesafe.
+     */
+    const send = service.send.bind(service);
 
-        signals: {
-            acceptDocument() {
-                send({
-                    type: 'ACCEPT_DOCUMENT',
-                });
-            },
+    /**
+     * Queries derive data from the current state of the state machine.
+     */
+    setListener(statusQuery, () => {
+        return formatStateMachineState(state);
+    });
 
-            setEmailForCode(email: string) {
-                send({
-                    type: 'SET_EMAIL',
-                    email,
-                });
-            },
+    /**
+     * Transform Temporal signals into events sent to the state machine.
+     * When using XState, logic should never happen where events are sent.
+     * Logic is handled inside the state machine.
+     */
+    setListener(acceptDocumentSignal, () => {
+        send({
+            type: 'ACCEPT_DOCUMENT',
+        });
+    });
+    setListener(setEmailForCodeSignal, ({ email }) => {
+        send({
+            type: 'SET_EMAIL',
+            email,
+        });
+    });
+    setListener(validateConfirmationCodeSignal, ({ confirmationCode }) => {
+        send({
+            type: 'VALIDATE_CONFIRMATION_CODE',
+            confirmationCode,
+        });
+    });
+    setListener(resendConfirmationCodeSignal, () => {
+        send({
+            type: 'RESEND_CONFIRMATION_CODE',
+        });
+    });
+    setListener(cancelProcedureSignal, () => {
+        send({
+            type: 'CANCEL_PROCEDURE',
+        });
+    });
 
-            validateConfirmationCode(confirmationCode: string) {
-                send({
-                    type: 'VALIDATE_CONFIRMATION_CODE',
-                    confirmationCode,
-                });
-            },
+    /**
+     * Wait for the machine to reach a `final state`.
+     * In such a state, a state machine can no longer receive events.
+     * XState allows us to run a callback when a state machine reaches its final state
+     * by using `onDone` method.
+     * In our case, we reach the final state of the state machine
+     * when the signature procedure ended.
+     */
+    await new Promise((resolve) => {
+        service.onDone(resolve);
+    });
 
-            resendConfirmationCode() {
-                send({
-                    type: 'RESEND_CONFIRMATION_CODE',
-                });
-            },
+    /**
+     * Return the final state of the machine.
+     */
+    return formatStateMachineState(state);
+}
 
-            cancelProcedure() {
-                send({
-                    type: 'CANCEL_PROCEDURE',
-                });
-            },
-        },
-    };
-};
+/**
+ * `formatStateMachineState` transforms the current state of the state machine
+ * into an universal identifier.
+ * We do not want to depend on states naming outside of the state machine.
+ *
+ * If the state is unknown, we throw an error.
+ */
+function formatStateMachineState(
+    state: StateFrom<typeof createElectronicSignatureMachine>,
+): ElectronicSignatureProcedureStatus {
+    if (state.matches('pendingSignature.waitingAgreement')) {
+        return 'PENDING.WAITING_AGREEMENT';
+    }
+    if (state.matches('pendingSignature.waitingEmail')) {
+        return 'PENDING.WAITING_EMAIL';
+    }
+    if (state.matches('pendingSignature.generatingConfirmationCode')) {
+        return 'PENDING.GENERATING_CONFIRMATION_CODE';
+    }
+    if (state.matches('pendingSignature.sendingConfirmationCode')) {
+        return 'PENDING.SENDING_CONFIRMATION_CODE';
+    }
+    if (state.matches('pendingSignature.waitingConfirmationCode')) {
+        return 'PENDING.WAITING_CONFIRMATION_CODE';
+    }
+    if (state.matches('pendingSignature.signingDocument')) {
+        return 'PENDING.SIGNING_DOCUMENT';
+    }
+    if (state.matches('procedureExpired')) {
+        return 'EXPIRED';
+    }
+    if (state.matches('procedureValidated')) {
+        return 'VALIDATED';
+    }
+    if (state.matches('procedureCancelled')) {
+        return 'CANCELLED';
+    }
+
+    throw new Error(
+        'Reached unreachable state; a state has probably been added or in from the state machine and needs to be normalized',
+    );
+}
