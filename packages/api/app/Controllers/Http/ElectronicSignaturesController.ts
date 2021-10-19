@@ -12,7 +12,7 @@ import type {
   setEmailForCodeSignal,
   statusQuery,
   validateConfirmationCodeSignal,
-} from '@temporal-electronic-signature/temporal/lib/workflows'
+} from '@temporal-electronic-signature/temporal/lib/types'
 
 type QueryReturn<Query> = Query extends QueryDefinition<infer ReturnValue, unknown[]>
   ? ReturnValue

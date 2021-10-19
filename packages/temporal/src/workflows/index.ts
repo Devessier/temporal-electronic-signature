@@ -8,24 +8,13 @@ import {
 import ms from 'ms';
 import { createMachine, assign, interpret, StateFrom } from 'xstate';
 import type * as activities from '../activities';
+import { ElectronicSignatureProcedureStatus } from '../types';
 import { assertEventType } from '../utils/machine/events';
 
 const { generateConfirmationCode, sendConfirmationCodeEmail, stampDocument } =
     createActivityHandle<typeof activities>({
         startToCloseTimeout: '1 minute',
     });
-
-export type ElectronicSignatureProcedureStatus =
-    | `PENDING.${
-          | 'WAITING_AGREEMENT'
-          | 'WAITING_EMAIL'
-          | 'GENERATING_CONFIRMATION_CODE'
-          | 'SENDING_CONFIRMATION_CODE'
-          | 'WAITING_CONFIRMATION_CODE'
-          | 'SIGNING_DOCUMENT'}`
-    | 'EXPIRED'
-    | 'VALIDATED'
-    | 'CANCELLED';
 
 interface ElectronicSignatureMachineContext {
     procedureTimeout: number;
