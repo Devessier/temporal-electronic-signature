@@ -1,5 +1,5 @@
 import { createActivityHandle, sleep } from '@temporalio/workflow';
-import { msToNumber } from '@temporalio/common';
+import ms from 'ms';
 import {
     createMachine,
     assign,
@@ -72,7 +72,7 @@ const createElectronicSignatureMachine = ({
 
             context: {
                 sendingConfirmationCodeTries: 0,
-                procedureTimeout: msToNumber('1 minute'),
+                procedureTimeout: ms('1 minute'),
                 email: undefined,
                 confirmationCode: undefined,
             },
