@@ -1,5 +1,5 @@
 import redaxios from 'redaxios';
-import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/interfaces';
+import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/types';
 
 interface CreateProcedureResponse {
 	procedureUuid: string;

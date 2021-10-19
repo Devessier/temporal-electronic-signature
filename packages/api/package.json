@@ -28,10 +28,10 @@
     "@adonisjs/drive-s3": "^1.0.4",
     "@adonisjs/repl": "^3.1.0",
     "@temporal-electronic-signature/temporal": "*",
-    "@temporalio/client": "^0.8.0",
     "pdf-lib": "^1.16.0",
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
-    "source-map-support": "^0.5.20"
+    "source-map-support": "^0.5.20",
+    "temporalio": "^0.11.1"
   }
 }

@@ -7,7 +7,7 @@ import {
 	setEmailForCode
 } from '$lib/services/procedure';
 import { createModel } from 'xstate/lib/model';
-import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/interfaces';
+import type { ElectronicSignatureProcedureStatus } from '@temporal-electronic-signature/temporal/lib/types';
 import { send } from 'xstate';
 import type { EventObject } from 'xstate';
 

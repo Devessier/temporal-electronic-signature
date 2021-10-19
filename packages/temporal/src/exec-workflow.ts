@@ -1,6 +1,6 @@
 import { Connection, WorkflowClient } from '@temporalio/client';
 import { createMachine, interpret } from 'xstate';
-import { electronicSignature } from './workflows';
+import { acceptDocumentSignal, electronicSignature } from './workflows';
 
 const interactWithElectronicSignatureWorkflowMachine = createMachine({
     initial: 'idle',
@@ -41,7 +41,7 @@ async function run() {
         interactWithElectronicSignatureWorkflowMachine.withConfig({
             actions: {
                 sendWatchedDocument: () => {
-                    workflow.signal.acceptDocument();
+                    workflow.signal(acceptDocumentSignal);
                 },
             },
         }),
