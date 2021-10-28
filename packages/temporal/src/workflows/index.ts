@@ -4,8 +4,9 @@ import {
     defineQuery,
     defineSignal,
     setListener,
+    CancellationScope,
+    isCancellation,
 } from '@temporalio/workflow';
-import ms from 'ms';
 import { createMachine, assign, interpret, StateFrom } from 'xstate';
 import type * as activities from '../activities';
 import { ElectronicSignatureProcedureStatus } from '../types';
@@ -17,7 +18,6 @@ const { generateConfirmationCode, sendConfirmationCodeEmail, stampDocument } =
     });
 
 interface ElectronicSignatureMachineContext {
-    procedureTimeout: number;
     email: string | undefined;
     sendingConfirmationCodeTries: number;
     confirmationCode: string | undefined;
@@ -69,7 +69,6 @@ const createElectronicSignatureMachine = ({
 
             context: {
                 sendingConfirmationCodeTries: 0,
-                procedureTimeout: ms('1 minute'),
                 email: undefined,
                 confirmationCode: undefined,
             },
@@ -77,7 +76,7 @@ const createElectronicSignatureMachine = ({
             states: {
                 pendingSignature: {
                     after: {
-                        PROCEDURE_TIMEOUT: {
+                        60_000: {
                             target: 'procedureExpired',
                         },
                     },
@@ -273,10 +272,6 @@ const createElectronicSignatureMachine = ({
                     confirmationCode: (_context, _event) => undefined,
                 }),
             },
-
-            delays: {
-                PROCEDURE_TIMEOUT: ({ procedureTimeout }) => procedureTimeout,
-            },
         },
     );
 
@@ -324,13 +319,30 @@ export async function electronicSignature({
          * `delayed transitions`, that is transitions that occur after some time.
          * By default it uses `setTimeout` and `clearTimeout`.
          * Here we want to ditch the default implementation and use Temporal `sleep` function.
+         * We run `sleep` in a cancellation scope returned by `setTimeout`
+         * so that in `clearTimeout` the timer can actually be cancelled.
          */
         clock: {
             setTimeout(fn, timeout) {
-                sleep(timeout).then(fn);
+                const scope = new CancellationScope();
+
+                scope
+                    .run(() => {
+                        return sleep(timeout).then(fn);
+                    })
+                    .catch((err) => {
+                        if (isCancellation(err)) {
+                            return;
+                        }
+
+                        throw err;
+                    });
+
+                return scope;
             },
-            clearTimeout() {
-                return undefined;
+
+            clearTimeout(scope: CancellationScope) {
+                scope.cancel();
             },
         },
     });
