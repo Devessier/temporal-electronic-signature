@@ -4,8 +4,14 @@
 	import { useAppContext } from '$lib/contexts/app';
 
 	const { state, send } = useAppContext();
-	$: selectedFile = $state.context.selectedFile;
-	$: hasSelectedFile = selectedFile !== undefined;
+	$: hasSelectedFile = $state.matches('selectedFile');
+
+	let documentInput: HTMLInputElement | undefined;
+	$: {
+		if ($state.matches('selectingFile') && documentInput !== undefined) {
+			documentInput.value = '';
+		}
+	}
 
 	function handleFileChange(event: Event) {
 		const target = event.target;
@@ -71,12 +77,13 @@
 					>
 						<span>Upload a file</span>
 						<input
-							on:change={handleFileChange}
+							bind:this={documentInput}
 							id="file-upload"
 							name="file-upload"
 							type="file"
 							accept="application/pdf"
 							class="sr-only"
+							on:change={handleFileChange}
 						/>
 					</label>
 					<p class="pl-1">or drag and drop</p>
