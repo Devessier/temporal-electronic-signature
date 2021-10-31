@@ -96,12 +96,7 @@ function createElectronicSignatureMachine({
                             SET_EMAIL: {
                                 target: 'generatingConfirmationCode',
 
-                                actions: [
-                                    'assignEmail',
-                                    (_, event) => {
-                                        console.log('waiting email', event);
-                                    },
-                                ],
+                                actions: 'assignEmail',
                             },
                         },
                     },
@@ -114,7 +109,8 @@ function createElectronicSignatureMachine({
                                 target: 'sendingConfirmationCode',
 
                                 actions: assign({
-                                    confirmationCode: (_, { data }) => data,
+                                    confirmationCode: (_context, { data }) =>
+                                        data,
                                 }),
                             },
                         },
@@ -195,12 +191,12 @@ function createElectronicSignatureMachine({
         },
     }).withConfig({
         services: {
-            generateConfirmationCode: async () => {
+            generateConfirmationCode: async (_context, _event) => {
                 return await generateConfirmationCode();
             },
 
             sendConfirmationCode:
-                ({ confirmationCode, email }) =>
+                ({ confirmationCode, email }, _event) =>
                 async (sendBack) => {
                     try {
                         if (
@@ -225,7 +221,7 @@ function createElectronicSignatureMachine({
                     }
                 },
 
-            signDocument: () => async (sendBack) => {
+            signDocument: (_context, _event) => async (sendBack) => {
                 try {
                     await stampDocument(documentId);
 
@@ -239,9 +235,10 @@ function createElectronicSignatureMachine({
         },
 
         guards: {
-            hasNotReachedConfirmationCodeSendingLimit: ({
-                sendingConfirmationCodeTries,
-            }) => sendingConfirmationCodeTries < 3,
+            hasNotReachedConfirmationCodeSendingLimit: (
+                { sendingConfirmationCodeTries },
+                _event,
+            ) => sendingConfirmationCodeTries < 3,
 
             isConfirmationCodeCorrect: ({ confirmationCode }, event) => {
                 assertEventType(event, 'VALIDATE_CONFIRMATION_CODE');
@@ -252,13 +249,14 @@ function createElectronicSignatureMachine({
 
         actions: {
             incrementSendingConfirmationCodeTries: assign({
-                sendingConfirmationCodeTries: ({
-                    sendingConfirmationCodeTries,
-                }) => sendingConfirmationCodeTries + 1,
+                sendingConfirmationCodeTries: (
+                    { sendingConfirmationCodeTries },
+                    _event,
+                ) => sendingConfirmationCodeTries + 1,
             }),
 
             assignEmail: assign({
-                email: (_, event) => {
+                email: (_context, event) => {
                     assertEventType(event, 'SET_EMAIL');
 
                     return event.email;
@@ -301,6 +299,8 @@ export async function electronicSignature({
     });
     /**
      * State holds the current state of the state machine.
+     *
+     * By default it is the `initialState` of the machine.
      */
     let state = machine.initialState;
     /**
@@ -456,6 +456,6 @@ function formatStateMachineState(
     }
 
     throw new Error(
-        'Reached unreachable state; a state has probably been added or in from the state machine and needs to be normalized',
+        'Reached unreachable state; a state has probably been added or renamed from the state machine and needs to be normalized in formatStateMachineState function',
     );
 }
