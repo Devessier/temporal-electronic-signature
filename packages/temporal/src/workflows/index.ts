@@ -55,225 +55,222 @@ interface CreateElectronicSignatureMachineArgs {
     documentId: string;
 }
 
-const createElectronicSignatureMachine = ({
+function createElectronicSignatureMachine({
     documentId,
-}: CreateElectronicSignatureMachineArgs) =>
-    createMachine<
+}: CreateElectronicSignatureMachineArgs) {
+    return createMachine<
         ElectronicSignatureMachineContext,
         ElectronicSignatureMachineEvents
-    >(
-        {
-            id: 'electronicSignatureMachine',
+    >({
+        id: 'electronicSignatureMachine',
 
-            initial: 'pendingSignature',
+        initial: 'pendingSignature',
 
-            context: {
-                sendingConfirmationCodeTries: 0,
-                email: undefined,
-                confirmationCode: undefined,
-            },
-
-            states: {
-                pendingSignature: {
-                    after: {
-                        60_000: {
-                            target: 'procedureExpired',
-                        },
-                    },
-
-                    initial: 'waitingAgreement',
-
-                    states: {
-                        waitingAgreement: {
-                            on: {
-                                ACCEPT_DOCUMENT: {
-                                    target: 'waitingEmail',
-                                },
-                            },
-                        },
-
-                        waitingEmail: {
-                            on: {
-                                SET_EMAIL: {
-                                    target: 'generatingConfirmationCode',
-
-                                    actions: [
-                                        'assignEmail',
-                                        (_, event) => {
-                                            console.log('waiting email', event);
-                                        },
-                                    ],
-                                },
-                            },
-                        },
-
-                        generatingConfirmationCode: {
-                            invoke: {
-                                src: 'generateConfirmationCode',
-
-                                onDone: {
-                                    target: 'sendingConfirmationCode',
-
-                                    actions: assign({
-                                        confirmationCode: (_, { data }) => data,
-                                    }),
-                                },
-                            },
-                        },
-
-                        sendingConfirmationCode: {
-                            invoke: {
-                                src: 'sendConfirmationCode',
-                            },
-
-                            on: {
-                                SENT_CONFIRMATION_CODE: {
-                                    target: 'waitingConfirmationCode',
-                                },
-                            },
-                        },
-
-                        waitingConfirmationCode: {
-                            on: {
-                                VALIDATE_CONFIRMATION_CODE: {
-                                    cond: 'isConfirmationCodeCorrect',
-
-                                    target: 'signingDocument',
-                                },
-
-                                RESEND_CONFIRMATION_CODE: {
-                                    cond: 'hasNotReachedConfirmationCodeSendingLimit',
-
-                                    target: 'sendingConfirmationCode',
-
-                                    actions: [
-                                        'incrementSendingConfirmationCodeTries',
-                                        'resetConfirmationCode',
-                                    ],
-                                },
-                            },
-                        },
-
-                        signingDocument: {
-                            invoke: {
-                                src: 'signDocument',
-                            },
-
-                            on: {
-                                SIGNED_DOCUMENT: {
-                                    target: 'procedureValidated',
-                                },
-                            },
-                        },
-
-                        procedureValidated: {
-                            type: 'final',
-                        },
-                    },
-
-                    on: {
-                        CANCEL_PROCEDURE: {
-                            target: 'procedureCancelled',
-                        },
-                    },
-
-                    onDone: {
-                        target: 'procedureValidated',
-                    },
-                },
-
-                procedureExpired: {
-                    type: 'final',
-                },
-
-                procedureValidated: {
-                    type: 'final',
-                },
-
-                procedureCancelled: {
-                    type: 'final',
-                },
-            },
+        context: {
+            sendingConfirmationCodeTries: 0,
+            email: undefined,
+            confirmationCode: undefined,
         },
 
-        {
-            services: {
-                generateConfirmationCode: async () => {
-                    return await generateConfirmationCode();
+        states: {
+            pendingSignature: {
+                after: {
+                    60_000: {
+                        target: 'procedureExpired',
+                    },
                 },
 
-                sendConfirmationCode:
-                    ({ confirmationCode, email }) =>
-                    async (sendBack) => {
-                        try {
-                            if (
-                                confirmationCode === undefined ||
-                                email === undefined
-                            ) {
-                                throw new Error(
-                                    'Confirmation code and email must be defined to send the confirmation code by email',
-                                );
-                            }
+                initial: 'waitingAgreement',
 
-                            await sendConfirmationCodeEmail({
-                                confirmationCode,
-                                email,
-                            });
-
-                            sendBack({
-                                type: 'SENT_CONFIRMATION_CODE',
-                            });
-                        } catch (err) {
-                            console.error(err);
-                        }
+                states: {
+                    waitingAgreement: {
+                        on: {
+                            ACCEPT_DOCUMENT: {
+                                target: 'waitingEmail',
+                            },
+                        },
                     },
 
-                signDocument: () => async (sendBack) => {
+                    waitingEmail: {
+                        on: {
+                            SET_EMAIL: {
+                                target: 'generatingConfirmationCode',
+
+                                actions: [
+                                    'assignEmail',
+                                    (_, event) => {
+                                        console.log('waiting email', event);
+                                    },
+                                ],
+                            },
+                        },
+                    },
+
+                    generatingConfirmationCode: {
+                        invoke: {
+                            src: 'generateConfirmationCode',
+
+                            onDone: {
+                                target: 'sendingConfirmationCode',
+
+                                actions: assign({
+                                    confirmationCode: (_, { data }) => data,
+                                }),
+                            },
+                        },
+                    },
+
+                    sendingConfirmationCode: {
+                        invoke: {
+                            src: 'sendConfirmationCode',
+                        },
+
+                        on: {
+                            SENT_CONFIRMATION_CODE: {
+                                target: 'waitingConfirmationCode',
+                            },
+                        },
+                    },
+
+                    waitingConfirmationCode: {
+                        on: {
+                            VALIDATE_CONFIRMATION_CODE: {
+                                cond: 'isConfirmationCodeCorrect',
+
+                                target: 'signingDocument',
+                            },
+
+                            RESEND_CONFIRMATION_CODE: {
+                                cond: 'hasNotReachedConfirmationCodeSendingLimit',
+
+                                target: 'sendingConfirmationCode',
+
+                                actions: [
+                                    'incrementSendingConfirmationCodeTries',
+                                    'resetConfirmationCode',
+                                ],
+                            },
+                        },
+                    },
+
+                    signingDocument: {
+                        invoke: {
+                            src: 'signDocument',
+                        },
+
+                        on: {
+                            SIGNED_DOCUMENT: {
+                                target: 'procedureValidated',
+                            },
+                        },
+                    },
+
+                    procedureValidated: {
+                        type: 'final',
+                    },
+                },
+
+                on: {
+                    CANCEL_PROCEDURE: {
+                        target: 'procedureCancelled',
+                    },
+                },
+
+                onDone: {
+                    target: 'procedureValidated',
+                },
+            },
+
+            procedureExpired: {
+                type: 'final',
+            },
+
+            procedureValidated: {
+                type: 'final',
+            },
+
+            procedureCancelled: {
+                type: 'final',
+            },
+        },
+    }).withConfig({
+        services: {
+            generateConfirmationCode: async () => {
+                return await generateConfirmationCode();
+            },
+
+            sendConfirmationCode:
+                ({ confirmationCode, email }) =>
+                async (sendBack) => {
                     try {
-                        await stampDocument(documentId);
+                        if (
+                            confirmationCode === undefined ||
+                            email === undefined
+                        ) {
+                            throw new Error(
+                                'Confirmation code and email must be defined to send the confirmation code by email',
+                            );
+                        }
+
+                        await sendConfirmationCodeEmail({
+                            confirmationCode,
+                            email,
+                        });
 
                         sendBack({
-                            type: 'SIGNED_DOCUMENT',
+                            type: 'SENT_CONFIRMATION_CODE',
                         });
                     } catch (err) {
                         console.error(err);
                     }
                 },
-            },
 
-            guards: {
-                hasNotReachedConfirmationCodeSendingLimit: ({
-                    sendingConfirmationCodeTries,
-                }) => sendingConfirmationCodeTries < 3,
+            signDocument: () => async (sendBack) => {
+                try {
+                    await stampDocument(documentId);
 
-                isConfirmationCodeCorrect: ({ confirmationCode }, event) => {
-                    assertEventType(event, 'VALIDATE_CONFIRMATION_CODE');
-
-                    return confirmationCode === event.confirmationCode;
-                },
-            },
-
-            actions: {
-                incrementSendingConfirmationCodeTries: assign({
-                    sendingConfirmationCodeTries: ({
-                        sendingConfirmationCodeTries,
-                    }) => sendingConfirmationCodeTries + 1,
-                }),
-
-                assignEmail: assign({
-                    email: (_, event) => {
-                        assertEventType(event, 'SET_EMAIL');
-
-                        return event.email;
-                    },
-                }),
-
-                resetConfirmationCode: assign({
-                    confirmationCode: (_context, _event) => undefined,
-                }),
+                    sendBack({
+                        type: 'SIGNED_DOCUMENT',
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
             },
         },
-    );
+
+        guards: {
+            hasNotReachedConfirmationCodeSendingLimit: ({
+                sendingConfirmationCodeTries,
+            }) => sendingConfirmationCodeTries < 3,
+
+            isConfirmationCodeCorrect: ({ confirmationCode }, event) => {
+                assertEventType(event, 'VALIDATE_CONFIRMATION_CODE');
+
+                return confirmationCode === event.confirmationCode;
+            },
+        },
+
+        actions: {
+            incrementSendingConfirmationCodeTries: assign({
+                sendingConfirmationCodeTries: ({
+                    sendingConfirmationCodeTries,
+                }) => sendingConfirmationCodeTries + 1,
+            }),
+
+            assignEmail: assign({
+                email: (_, event) => {
+                    assertEventType(event, 'SET_EMAIL');
+
+                    return event.email;
+                },
+            }),
+
+            resetConfirmationCode: assign({
+                confirmationCode: (_context, _event) => undefined,
+            }),
+        },
+    });
+}
 
 interface ElectronicSignatureWorkflowArgs {
     documentId: string;
