@@ -51,145 +51,163 @@ type ElectronicSignatureMachineEvents =
           type: 'CANCEL_PROCEDURE';
       };
 
-interface CreateElectronicSignatureMachineArgs {
+const electronicSignatureMachine = createMachine<
+    ElectronicSignatureMachineContext,
+    ElectronicSignatureMachineEvents
+>({
+    id: 'electronicSignatureMachine',
+
+    initial: 'pendingSignature',
+
+    context: {
+        sendingConfirmationCodeTries: 0,
+        email: undefined,
+        confirmationCode: undefined,
+    },
+
+    states: {
+        pendingSignature: {
+            after: {
+                120_000: {
+                    target: 'procedureExpired',
+                },
+            },
+
+            initial: 'waitingAgreement',
+
+            states: {
+                waitingAgreement: {
+                    on: {
+                        ACCEPT_DOCUMENT: {
+                            target: 'waitingEmail',
+                        },
+                    },
+                },
+
+                waitingEmail: {
+                    on: {
+                        SET_EMAIL: {
+                            target: 'generatingConfirmationCode',
+
+                            actions: 'assignEmail',
+                        },
+                    },
+                },
+
+                generatingConfirmationCode: {
+                    invoke: {
+                        src: 'generateConfirmationCode',
+
+                        onDone: {
+                            target: 'sendingConfirmationCode',
+
+                            actions: assign({
+                                confirmationCode: (_context, { data }) => data,
+                            }),
+                        },
+                    },
+                },
+
+                sendingConfirmationCode: {
+                    invoke: {
+                        src: 'sendConfirmationCode',
+                    },
+
+                    on: {
+                        SENT_CONFIRMATION_CODE: {
+                            target: 'waitingConfirmationCode',
+                        },
+                    },
+                },
+
+                waitingConfirmationCode: {
+                    on: {
+                        VALIDATE_CONFIRMATION_CODE: {
+                            cond: 'isConfirmationCodeCorrect',
+
+                            target: 'signingDocument',
+                        },
+
+                        RESEND_CONFIRMATION_CODE: {
+                            cond: 'hasNotReachedConfirmationCodeSendingLimit',
+
+                            target: 'sendingConfirmationCode',
+
+                            actions: [
+                                'incrementSendingConfirmationCodeTries',
+                                'resetConfirmationCode',
+                            ],
+                        },
+                    },
+                },
+
+                signingDocument: {
+                    invoke: {
+                        src: 'signDocument',
+                    },
+
+                    on: {
+                        SIGNED_DOCUMENT: {
+                            target: 'procedureValidated',
+                        },
+                    },
+                },
+
+                procedureValidated: {
+                    type: 'final',
+                },
+            },
+
+            on: {
+                CANCEL_PROCEDURE: {
+                    target: 'procedureCancelled',
+                },
+            },
+
+            onDone: {
+                target: 'procedureValidated',
+            },
+        },
+
+        procedureExpired: {
+            type: 'final',
+        },
+
+        procedureValidated: {
+            type: 'final',
+        },
+
+        procedureCancelled: {
+            type: 'final',
+        },
+    },
+});
+
+interface ElectronicSignatureWorkflowArgs {
     documentId: string;
 }
 
-function createElectronicSignatureMachine({
+export const statusQuery =
+    defineQuery<ElectronicSignatureProcedureStatus>('status');
+
+export const acceptDocumentSignal = defineSignal('acceptDocument');
+export const setEmailForCodeSignal =
+    defineSignal<[{ email: string }]>('setEmailForCode');
+export const validateConfirmationCodeSignal = defineSignal<
+    [{ confirmationCode: string }]
+>('validateConfirmationCode');
+export const resendConfirmationCodeSignal = defineSignal(
+    'resendConfirmationCode',
+);
+export const cancelProcedureSignal = defineSignal('cancelProcedure');
+
+export async function electronicSignature({
     documentId,
-}: CreateElectronicSignatureMachineArgs) {
-    return createMachine<
-        ElectronicSignatureMachineContext,
-        ElectronicSignatureMachineEvents
-    >({
-        id: 'electronicSignatureMachine',
-
-        initial: 'pendingSignature',
-
-        context: {
-            sendingConfirmationCodeTries: 0,
-            email: undefined,
-            confirmationCode: undefined,
-        },
-
-        states: {
-            pendingSignature: {
-                after: {
-                    60_000: {
-                        target: 'procedureExpired',
-                    },
-                },
-
-                initial: 'waitingAgreement',
-
-                states: {
-                    waitingAgreement: {
-                        on: {
-                            ACCEPT_DOCUMENT: {
-                                target: 'waitingEmail',
-                            },
-                        },
-                    },
-
-                    waitingEmail: {
-                        on: {
-                            SET_EMAIL: {
-                                target: 'generatingConfirmationCode',
-
-                                actions: 'assignEmail',
-                            },
-                        },
-                    },
-
-                    generatingConfirmationCode: {
-                        invoke: {
-                            src: 'generateConfirmationCode',
-
-                            onDone: {
-                                target: 'sendingConfirmationCode',
-
-                                actions: assign({
-                                    confirmationCode: (_context, { data }) =>
-                                        data,
-                                }),
-                            },
-                        },
-                    },
-
-                    sendingConfirmationCode: {
-                        invoke: {
-                            src: 'sendConfirmationCode',
-                        },
-
-                        on: {
-                            SENT_CONFIRMATION_CODE: {
-                                target: 'waitingConfirmationCode',
-                            },
-                        },
-                    },
-
-                    waitingConfirmationCode: {
-                        on: {
-                            VALIDATE_CONFIRMATION_CODE: {
-                                cond: 'isConfirmationCodeCorrect',
-
-                                target: 'signingDocument',
-                            },
-
-                            RESEND_CONFIRMATION_CODE: {
-                                cond: 'hasNotReachedConfirmationCodeSendingLimit',
-
-                                target: 'sendingConfirmationCode',
-
-                                actions: [
-                                    'incrementSendingConfirmationCodeTries',
-                                    'resetConfirmationCode',
-                                ],
-                            },
-                        },
-                    },
-
-                    signingDocument: {
-                        invoke: {
-                            src: 'signDocument',
-                        },
-
-                        on: {
-                            SIGNED_DOCUMENT: {
-                                target: 'procedureValidated',
-                            },
-                        },
-                    },
-
-                    procedureValidated: {
-                        type: 'final',
-                    },
-                },
-
-                on: {
-                    CANCEL_PROCEDURE: {
-                        target: 'procedureCancelled',
-                    },
-                },
-
-                onDone: {
-                    target: 'procedureValidated',
-                },
-            },
-
-            procedureExpired: {
-                type: 'final',
-            },
-
-            procedureValidated: {
-                type: 'final',
-            },
-
-            procedureCancelled: {
-                type: 'final',
-            },
-        },
-    }).withConfig({
+}: ElectronicSignatureWorkflowArgs): Promise<ElectronicSignatureProcedureStatus> {
+    /**
+     * Create a custom machine with the documentId of the procedure.
+     */
+    const machine = electronicSignatureMachine.withConfig({
         services: {
             generateConfirmationCode: async (_context, _event) => {
                 return await generateConfirmationCode();
@@ -267,35 +285,6 @@ function createElectronicSignatureMachine({
                 confirmationCode: (_context, _event) => undefined,
             }),
         },
-    });
-}
-
-interface ElectronicSignatureWorkflowArgs {
-    documentId: string;
-}
-
-export const statusQuery =
-    defineQuery<ElectronicSignatureProcedureStatus>('status');
-
-export const acceptDocumentSignal = defineSignal('acceptDocument');
-export const setEmailForCodeSignal =
-    defineSignal<[{ email: string }]>('setEmailForCode');
-export const validateConfirmationCodeSignal = defineSignal<
-    [{ confirmationCode: string }]
->('validateConfirmationCode');
-export const resendConfirmationCodeSignal = defineSignal(
-    'resendConfirmationCode',
-);
-export const cancelProcedureSignal = defineSignal('cancelProcedure');
-
-export async function electronicSignature({
-    documentId,
-}: ElectronicSignatureWorkflowArgs): Promise<ElectronicSignatureProcedureStatus> {
-    /**
-     * Create a custom machine with the documentId of the procedure.
-     */
-    const machine = createElectronicSignatureMachine({
-        documentId,
     });
     /**
      * State holds the current state of the state machine.
@@ -425,7 +414,7 @@ export async function electronicSignature({
  * If the state is unknown, we throw an error.
  */
 function formatStateMachineState(
-    state: StateFrom<typeof createElectronicSignatureMachine>,
+    state: StateFrom<typeof electronicSignatureMachine>,
 ): ElectronicSignatureProcedureStatus {
     if (state.matches('pendingSignature.waitingAgreement')) {
         return 'PENDING.WAITING_AGREEMENT';
