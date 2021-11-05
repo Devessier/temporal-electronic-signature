@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "@temporal-electronic-signature/api",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -32,6 +32,9 @@
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
     "source-map-support": "^0.5.20",
-    "temporalio": "^0.11.1"
+    "temporalio": "^0.14.0"
+  },
+  "volta": {
+    "node": "14.18.1"
   }
 }

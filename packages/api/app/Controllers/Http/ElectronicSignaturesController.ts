@@ -42,12 +42,17 @@ export default class ElectronicSignaturesController {
     })
 
     const connection = new Connection()
-    const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>('electronicSignature', {
-      taskQueue: 'electronic-signature',
+    const client = new WorkflowClient(connection.service, {
+      workflowDefaults: {
+        taskQueue: 'electronic-signature',
+      },
     })
-    await handle.start({
-      documentId,
+    const handle = await client.start<typeof electronicSignature>('electronicSignature', {
+      args: [
+        {
+          documentId,
+        },
+      ],
     })
 
     return {
@@ -64,9 +69,7 @@ export default class ElectronicSignaturesController {
 
     const connection = new Connection()
     const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = client.getHandle<typeof electronicSignature>(procedureUuid)
 
     const status = await handle.query<QueryReturn<typeof statusQuery>>('status')
 
@@ -78,9 +81,7 @@ export default class ElectronicSignaturesController {
 
     const connection = new Connection()
     const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = client.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof cancelProcedureSignal>>('cancelProcedure')
   }
@@ -90,9 +91,7 @@ export default class ElectronicSignaturesController {
 
     const connection = new Connection()
     const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = client.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof acceptDocumentSignal>>('acceptDocument')
   }
@@ -106,9 +105,7 @@ export default class ElectronicSignaturesController {
 
     const connection = new Connection()
     const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = client.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof setEmailForCodeSignal>>('setEmailForCode', { email })
   }
@@ -122,9 +119,7 @@ export default class ElectronicSignaturesController {
 
     const connection = new Connection()
     const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = client.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof validateConfirmationCodeSignal>>(
       'validateConfirmationCode',
