@@ -2,7 +2,6 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { cuid } from '@ioc:Adonis/Core/Helpers'
 import Drive from '@ioc:Adonis/Core/Drive'
-import { Connection, WorkflowClient } from '@temporalio/client'
 import type { QueryDefinition, SignalDefinition } from '@temporalio/common'
 import type {
   acceptDocumentSignal,
@@ -13,6 +12,7 @@ import type {
   statusQuery,
   validateConfirmationCodeSignal,
 } from '@temporal-electronic-signature/temporal/lib/types'
+import { temporalClient } from '../../../start/temporal'
 
 type QueryReturn<Query> = Query extends QueryDefinition<infer ReturnValue, unknown[]>
   ? ReturnValue
@@ -41,13 +41,12 @@ export default class ElectronicSignaturesController {
       contentType: 'application/pdf',
     })
 
-    const connection = new Connection()
-    const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>('electronicSignature', {
-      taskQueue: 'electronic-signature',
-    })
-    await handle.start({
-      documentId,
+    const handle = await temporalClient.start<typeof electronicSignature>('electronicSignature', {
+      args: [
+        {
+          documentId,
+        },
+      ],
     })
 
     return {
@@ -62,11 +61,7 @@ export default class ElectronicSignaturesController {
   }: HttpContextContract): Promise<ElectronicSignatureProcedureStatus> {
     const procedureUuid = request.param('uuid')
 
-    const connection = new Connection()
-    const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = temporalClient.getHandle<typeof electronicSignature>(procedureUuid)
 
     const status = await handle.query<QueryReturn<typeof statusQuery>>('status')
 
@@ -76,11 +71,7 @@ export default class ElectronicSignaturesController {
   public async cancelProcedure({ request }: HttpContextContract): Promise<void> {
     const procedureUuid = request.param('uuid')
 
-    const connection = new Connection()
-    const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = temporalClient.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof cancelProcedureSignal>>('cancelProcedure')
   }
@@ -88,11 +79,7 @@ export default class ElectronicSignaturesController {
   public async agreeDocument({ request }: HttpContextContract): Promise<void> {
     const procedureUuid = request.param('uuid')
 
-    const connection = new Connection()
-    const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = temporalClient.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof acceptDocumentSignal>>('acceptDocument')
   }
@@ -104,11 +91,7 @@ export default class ElectronicSignaturesController {
     const procedureUuid = request.param('uuid')
     const { email } = await request.validate({ schema: setEmailForCodeSchema })
 
-    const connection = new Connection()
-    const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = temporalClient.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof setEmailForCodeSignal>>('setEmailForCode', { email })
   }
@@ -120,11 +103,7 @@ export default class ElectronicSignaturesController {
     const procedureUuid = request.param('uuid')
     const { code } = await request.validate({ schema: sendConfirmationCodeSchema })
 
-    const connection = new Connection()
-    const client = new WorkflowClient(connection.service)
-    const handle = client.createWorkflowHandle<typeof electronicSignature>({
-      workflowId: procedureUuid,
-    })
+    const handle = temporalClient.getHandle<typeof electronicSignature>(procedureUuid)
 
     await handle.signal<SignalArgs<typeof validateConfirmationCodeSignal>>(
       'validateConfirmationCode',

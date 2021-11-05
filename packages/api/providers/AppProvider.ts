@@ -11,6 +11,11 @@ export default class AppProvider {
 
   public async ready() {
     // App is ready
+    if (this.app.environment !== 'web') {
+      return
+    }
+
+    await import('../start/temporal')
   }
 
   public async shutdown() {

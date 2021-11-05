@@ -1,9 +1,9 @@
 import {
-    createActivityHandle,
+    proxyActivities,
     sleep,
     defineQuery,
     defineSignal,
-    setListener,
+    setHandler,
     CancellationScope,
     isCancellation,
 } from '@temporalio/workflow';
@@ -13,7 +13,7 @@ import { ElectronicSignatureProcedureStatus } from '../types';
 import { assertEventType } from '../utils/machine/events';
 
 const { generateConfirmationCode, sendConfirmationCodeEmail, stampDocument } =
-    createActivityHandle<typeof activities>({
+    proxyActivities<typeof activities>({
         startToCloseTimeout: '1 minute',
     });
 
@@ -351,7 +351,7 @@ export async function electronicSignature({
     /**
      * Queries derive data from the current state of the state machine.
      */
-    setListener(statusQuery, () => {
+    setHandler(statusQuery, () => {
         return formatStateMachineState(state);
     });
 
@@ -360,29 +360,29 @@ export async function electronicSignature({
      * When using XState, logic should never happen where events are sent.
      * Logic is handled inside the state machine.
      */
-    setListener(acceptDocumentSignal, () => {
+    setHandler(acceptDocumentSignal, () => {
         send({
             type: 'ACCEPT_DOCUMENT',
         });
     });
-    setListener(setEmailForCodeSignal, ({ email }) => {
+    setHandler(setEmailForCodeSignal, ({ email }) => {
         send({
             type: 'SET_EMAIL',
             email,
         });
     });
-    setListener(validateConfirmationCodeSignal, ({ confirmationCode }) => {
+    setHandler(validateConfirmationCodeSignal, ({ confirmationCode }) => {
         send({
             type: 'VALIDATE_CONFIRMATION_CODE',
             confirmationCode,
         });
     });
-    setListener(resendConfirmationCodeSignal, () => {
+    setHandler(resendConfirmationCodeSignal, () => {
         send({
             type: 'RESEND_CONFIRMATION_CODE',
         });
     });
-    setListener(cancelProcedureSignal, () => {
+    setHandler(cancelProcedureSignal, () => {
         send({
             type: 'CANCEL_PROCEDURE',
         });
