@@ -2,12 +2,12 @@
 	import AppLayout from '$lib/AppLayout.svelte';
 	import { useAppContext } from '$lib/contexts/app';
 
-	const { send } = useAppContext();
+	const { appService } = useAppContext();
 
 	let emailAddress: string = '';
 
 	function handleSubmit() {
-		send({
+		appService.send({
 			type: 'SELECT_EMAIL',
 			email: emailAddress
 		});
