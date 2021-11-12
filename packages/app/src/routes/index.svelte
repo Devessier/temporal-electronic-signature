@@ -1,14 +1,17 @@
 <script lang="ts">
+	import { useSelector } from '@xstate/svelte';
 	import { fade } from 'svelte/transition';
 	import AppLayout from '$lib/AppLayout.svelte';
 	import { useAppContext } from '$lib/contexts/app';
 
-	const { state, send } = useAppContext();
-	$: hasSelectedFile = $state.matches('selectedFile');
+	const { appService } = useAppContext();
+
+	const hasSelectedFile = useSelector(appService, (state) => state.matches('selectedFile'));
+	const isSelectingFile = useSelector(appService, (state) => state.matches('selectingFile'));
 
 	let documentInput: HTMLInputElement | undefined;
 	$: {
-		if ($state.matches('selectingFile') && documentInput !== undefined) {
+		if ($isSelectingFile === true && documentInput !== undefined) {
 			documentInput.value = '';
 		}
 	}
@@ -30,20 +33,20 @@
 			return;
 		}
 
-		send({
+		appService.send({
 			type: 'SELECT_FILE',
 			file: firstFile
 		});
 	}
 
 	function handleCreateProcedureClick() {
-		send({
+		appService.send({
 			type: 'CREATE_PROCEDURE'
 		});
 	}
 
 	function handleCancelProcedureClick() {
-		send({
+		appService.send({
 			type: 'CANCEL_PROCEDURE_CREATION'
 		});
 	}
@@ -93,7 +96,7 @@
 			</div>
 		</div>
 
-		{#if hasSelectedFile}
+		{#if $hasSelectedFile === true}
 			<div
 				transition:fade={{ duration: 200 }}
 				class="flex items-center p-4 mt-4 space-x-2 border border-gray-200 rounded-md"
