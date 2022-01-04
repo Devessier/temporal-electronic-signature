@@ -1108,10 +1108,10 @@
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-consumer/-/source-map-consumer-0.8.0.tgz#33bf4b7b39c178821606f669bbc447a6a629786b"
   integrity sha512-41qniHzTU8yAGbCp04ohlmSrZf8bkf/iJsl3V0dRGsQN/5GFfx+LbCSsCpp2gqrqjTVg/K6O8ycoV35JIwAzAg==
 
-"@cspotcode/source-map-support@0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.6.1.tgz#118511f316e2e87ee4294761868e254d3da47960"
-  integrity sha512-DX3Z+T5dt1ockmPdobJS/FAsQPW4V4SrWEhD2iYQT2Cb2tQsiMnYxrcUH9By/Z3B+v0S5LMBkQtV/XOBbpLEOg==
+"@cspotcode/source-map-support@0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.7.0.tgz#4789840aa859e46d2f3173727ab707c66bf344f5"
+  integrity sha512-X4xqRHqN8ACt2aHVe51OxeA2HjbcL4MqFqXkrmQszJ1NOUuUu5u6Vqx/0lZSVNku7velL5FC/s5uEAj1lsBMhA==
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
@@ -2271,68 +2271,70 @@
   dependencies:
     mini-svg-data-uri "^1.2.3"
 
-"@temporalio/activity@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@temporalio/activity/-/activity-0.14.0.tgz#414d3afbd7e4be0a153d266966cfc73809ddfada"
-  integrity sha512-hwZHcZh/vwPiHMI3orWDTw1r9UVuhvgQr7AGULv0JyLdSxbAgw7apknT5ZiXB3DKRwj4+9hspvNHWI+M4+jyXw==
+"@temporalio/activity@^0.17.2":
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/@temporalio/activity/-/activity-0.17.2.tgz#b831f6d34cf4526ba38253f404fea977ec57c1b0"
+  integrity sha512-u71Uof/NNOJUrmYBZg/Xp+rjOKaPSlZSaU7Lxa8XLVYQjXADqISCHDWB+6xDP4vf9m2VCvz8FY//CekFR6sASg==
   dependencies:
-    "@temporalio/common" "^0.14.0"
+    "@temporalio/common" "^0.17.2"
     abort-controller "^3.0.0"
 
-"@temporalio/client@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@temporalio/client/-/client-0.14.0.tgz#341f29f1fd5d0133b48336bb76e1bddedd60239b"
-  integrity sha512-cMdyeAoWjCttoVcaFi0kCuEivCBZxpfVeXB7KKl4CkDkp6w0gbg7AZ/45MI00ph7l2qIlB2p9TL8zUKmLNn5eg==
+"@temporalio/client@^0.17.2":
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/@temporalio/client/-/client-0.17.2.tgz#a7a9a7ad4d6d23856922a115358200eb1c92d616"
+  integrity sha512-W7cZiAX44JPXUn11BI/QF0kB8YhzDcQ3MECtgOmKoAdIc7cApb8tMxVcrq9AM1p6mTd1lZ0O0vuAmAaLrqXw0w==
   dependencies:
     "@grpc/grpc-js" "^1.3.7"
-    "@temporalio/common" "^0.14.0"
-    "@temporalio/proto" "^0.14.0"
+    "@temporalio/common" "^0.17.2"
+    "@temporalio/proto" "^0.17.2"
     ms "^2.1.3"
     protobufjs "^6.11.2"
     uuid "^8.3.2"
 
-"@temporalio/common@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@temporalio/common/-/common-0.14.0.tgz#a39d96f29e15260d582dc655656bddd57b2be90f"
-  integrity sha512-UeAOhs9SspITS7YSNeIjH7KeTGO7v74W+fpTwtX1muACvgQ0b6Wm3LZEU1TO6ahBUtJ0RdPxyWkDrWKCbSAF9A==
+"@temporalio/common@^0.17.2":
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/@temporalio/common/-/common-0.17.2.tgz#fcb1c9a40b00e47d540d7b29b16d3e4043f3120f"
+  integrity sha512-8j6Tfzn2tXMRL0G+UKpBgKCMjhIBjRVZlkl+8rEKEaaYhf20NPtcL07DkU/wYYbG9NmLE6haqM5afmm33MAumg==
   dependencies:
-    "@temporalio/proto" "^0.14.0"
+    "@temporalio/proto" "^0.17.2"
     ms "^2.1.3"
 
-"@temporalio/core-bridge@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@temporalio/core-bridge/-/core-bridge-0.14.0.tgz#25a12b334cfb81abef7c0c03c4c85309bb47904b"
-  integrity sha512-VaiQDbFpd8NMsVIDiNUYs4c0tmI6pzrucVxKkbJCDB4Eh5wOQCy5qWIt0JnZA1jBB9tv+pJ+s1X4GkXR098cmw==
+"@temporalio/core-bridge@^0.17.2":
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/@temporalio/core-bridge/-/core-bridge-0.17.2.tgz#142bd23e6bc764ef606c26b2d3700520da609ffe"
+  integrity sha512-4iXSc2a1f+S+8zqODpvP8VANzrVEOSyqEUZ3gGJ0YBXmaa4rEmw6K1yKFzHzXqdE9tM0T+36Y9I7PD1jv63t8A==
   dependencies:
-    "@temporalio/common" "^0.14.0"
+    "@opentelemetry/api" "^1.0.3"
+    "@temporalio/common" "^0.17.2"
+    arg "^5.0.1"
     cargo-cp-artifact "^0.1.4"
+    which "^2.0.2"
 
-"@temporalio/proto@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@temporalio/proto/-/proto-0.14.0.tgz#bf858f834fbfba40555947ea84be699c0434b4a4"
-  integrity sha512-7dpBt2wWZuROuyRNragPYNaIMgvb2+q5nn8etev9Hpqbu3bh4BubiLeCcehLuO9YsINK++LKj40bEdjak7vaAQ==
+"@temporalio/proto@^0.17.2":
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/@temporalio/proto/-/proto-0.17.2.tgz#273a4a5eab66a0de91caae5327f4b116d6da3898"
+  integrity sha512-GgPHn7Dc4f/n53c/AUnegoaLTv6LRg9kHjdhsJiWawW7RZGXCVvwjbdmZEiiCd2fkDTj7+6HBklyeKPX7M52OA==
   dependencies:
     "@types/long" "^4.0.1"
     long "^4.0.0"
     protobufjs "^6.11.2"
 
-"@temporalio/worker@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@temporalio/worker/-/worker-0.14.0.tgz#445d681f412654940bb66f662d304e21075e4466"
-  integrity sha512-aJO+tGPTi35W/uHCtSdQx8pCCr5005Xf2apGk98N/MrhBxwsjB+68LyVr/B7IEjfgFGUr4g4VCTcbKz/eeV9ag==
+"@temporalio/worker@^0.17.2":
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/@temporalio/worker/-/worker-0.17.2.tgz#c3b9c0ff77167e26bbc787561b408532450ed80c"
+  integrity sha512-KfFCIFtscE7uegrqz0xXeZF3zgjBIy+2m7PiH9Xef1UXAATuS7+yRtawjlXOAgyMhtgOJqm6ISLtfEvXrXtV8g==
   dependencies:
     "@opentelemetry/api" "^1.0.3"
-    "@temporalio/activity" "^0.14.0"
-    "@temporalio/common" "^0.14.0"
-    "@temporalio/core-bridge" "^0.14.0"
-    "@temporalio/proto" "^0.14.0"
-    "@temporalio/workflow" "^0.14.0"
+    "@temporalio/activity" "^0.17.2"
+    "@temporalio/common" "^0.17.2"
+    "@temporalio/core-bridge" "^0.17.2"
+    "@temporalio/proto" "^0.17.2"
+    "@temporalio/workflow" "^0.17.2"
     abort-controller "^3.0.0"
     cargo-cp-artifact "^0.1.4"
     dedent "^0.7.0"
     fs-extra "^10.0.0"
     heap-js "^2.1.6"
-    isolated-vm "^4.3.4"
     memfs "^3.2.2"
     ms "^2.1.3"
     nan "^2.15.0"
@@ -2343,13 +2345,13 @@
     uuid "^8.3.2"
     webpack "^5.51.1"
 
-"@temporalio/workflow@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@temporalio/workflow/-/workflow-0.14.0.tgz#61241f40be570e5b4107736dc3367f7bbb3baf79"
-  integrity sha512-migz4yFKLZZIs2Ir7QeDXpE5IRXYUv5bbAUJYhlvx1HSXfLerSkxze/qLwklGFaCAJXBOk8f3ZTumJhOscRUow==
+"@temporalio/workflow@^0.17.2":
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/@temporalio/workflow/-/workflow-0.17.2.tgz#fb9df709e469cffaff3a39832193e25eaf25247b"
+  integrity sha512-kgxRQkutTo1pQRAEWE7gh37sTr5jN/sauZMxy7V4Q6a/diGUSLzwG2F8qb+D/gtVRUZnlECQ2ZIoBrIU5J1gLw==
   dependencies:
-    "@temporalio/common" "^0.14.0"
-    "@temporalio/proto" "^0.14.0"
+    "@temporalio/common" "^0.17.2"
+    "@temporalio/proto" "^0.17.2"
 
 "@tokenizer/token@^0.3.0":
   version "0.3.0"
@@ -2376,7 +2378,7 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node12/-/node12-1.0.9.tgz#62c1f6dee2ebd9aead80dc3afa56810e58e1a04c"
   integrity sha512-/yBMcem+fbvhSREH+s14YJi18sp7J9jpuhYByADT2rypfajMZZN4WQ6zBGgBKp53NKmqI36wFYDb3yaMPurITw==
 
-"@tsconfig/node14@^1.0.0":
+"@tsconfig/node14@^1.0.0", "@tsconfig/node14@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@tsconfig/node14/-/node14-1.0.1.tgz#95f2d167ffb9b8d2068b0b235302fafd4df711f2"
   integrity sha512-509r2+yARFfHHE7T6Puu2jjkoycftovhXRqW328PDXTVGKihlb1P8Z9mMZH04ebyajfRY7dedfGynlrFHJUQCg==
@@ -3632,7 +3634,7 @@ cheap-watch@^1.0.4:
   resolved "https://registry.yarnpkg.com/cheap-watch/-/cheap-watch-1.0.4.tgz#0bcb4a3a8fbd9d5327936493f6b56baa668d8fef"
   integrity sha512-QR/9FrtRL5fjfUJBhAKCdi0lSRQ3rVRRum3GF9wDKp2TJbEIMGhUEr2yU8lORzm9Isdjx7/k9S0DFDx+z5VGtw==
 
-chokidar@^3.2.2, chokidar@^3.4.1, chokidar@^3.5.2:
+chokidar@^3.4.1, chokidar@^3.5.2:
   version "3.5.2"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.2.tgz#dba3976fcadb016f66fd365021d91600d01c1e75"
   integrity sha512-ekGhOnNVPgT77r4K/U3GDhu+FQ2S8TnK/s2KbIGXi0SZWuwkZ2QNyfWdZW+TVfn84DpEP7rLeCt2UI6bJ8GwbQ==
@@ -4259,7 +4261,7 @@ debug@4, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2:
   dependencies:
     ms "2.1.2"
 
-debug@^3.2.6:
+debug@^3.2.7:
   version "3.2.7"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.2.7.tgz#72580b7e9145fb39b6676f9c5e5fb100b934179a"
   integrity sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==
@@ -6363,11 +6365,6 @@ isobject@^3.0.0, isobject@^3.0.1:
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-3.0.1.tgz#4e431e92b11a9731636aa1f9c8d1ccbcfdab78df"
   integrity sha1-TkMekrEalzFjaqH5yNHMvP2reN8=
 
-isolated-vm@^4.3.4:
-  version "4.3.5"
-  resolved "https://registry.yarnpkg.com/isolated-vm/-/isolated-vm-4.3.5.tgz#e6a6521461acff8a77288167b3ca323d89608de1"
-  integrity sha512-wGiZ1JUmuldZKnitygwReAnJhqWC9RFjbNqV1AkjUVO5TI+ProPGTjwVA4++oY+1wC7LSSorJRS7ki5LMJyYJQ==
-
 isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
@@ -7262,10 +7259,10 @@ nanoid@^3.1.25:
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.1.28.tgz#3c01bac14cb6c5680569014cc65a2f26424c6bd4"
   integrity sha512-gSu9VZ2HtmoKYe/lmyPFES5nknFrHa+/DT9muUFWFMi6Jh9E1I7bkvlQ8xxf1Kos9pi9o8lBnIOkatMhKX/YUw==
 
-nanoid@^3.1.29:
-  version "3.1.29"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.1.29.tgz#214fb2d7a33e1a5bef4757b779dfaeb6a4e5aeb4"
-  integrity sha512-dW2pUSGZ8ZnCFIlBIA31SV8huOGCHb6OwzVCc7A69rb/a+SgPBwfmLvK5TKQ3INPbRkcI8a/Owo0XbiTNH19wg==
+nanoid@^3.1.30:
+  version "3.1.30"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.1.30.tgz#63f93cc548d2a113dc5dfbc63bfa09e2b9b64362"
+  integrity sha512-zJpuPDwOv8D2zq2WRoMe1HsfZthVewpel9CAvTfc/2mBD1uUT/agc5f7GHGWXlYkFvi1mVxe4IjvP2HNrop7nQ==
 
 nanomatch@^1.2.9:
   version "1.2.13"
@@ -7380,25 +7377,25 @@ node-repl-await@^0.1.2:
     acorn-static-class-features "^1.0.0"
     acorn-walk "^8.0.2"
 
-nodemailer@^6.6.5:
-  version "6.6.5"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.6.5.tgz#f9f6953cee5cfe82cbea152eeddacf7a0442049a"
-  integrity sha512-C/v856DBijUzHcHIgGpQoTrfsH3suKIRAGliIzCstatM2cAa+MYX3LuyCrABiO/cdJTxgBBHXxV1ztiqUwst5A==
+nodemailer@^6.7.2:
+  version "6.7.2"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.7.2.tgz#44b2ad5f7ed71b7067f7a21c4fedabaec62b85e0"
+  integrity sha512-Dz7zVwlef4k5R71fdmxwR8Q39fiboGbu3xgswkzGwczUfjp873rVxt1O46+Fh0j1ORnAC6L9+heI8uUpO6DT7Q==
 
-nodemon@^2.0.12:
-  version "2.0.13"
-  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-2.0.13.tgz#67d40d3a4d5bd840aa785c56587269cfcf5d24aa"
-  integrity sha512-UMXMpsZsv1UXUttCn6gv8eQPhn6DR4BW+txnL3IN5IHqrCwcrT/yWHfL35UsClGXknTH79r5xbu+6J1zNHuSyA==
+nodemon@^2.0.15:
+  version "2.0.15"
+  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-2.0.15.tgz#504516ce3b43d9dc9a955ccd9ec57550a31a8d4e"
+  integrity sha512-gdHMNx47Gw7b3kWxJV64NI+Q5nfl0y5DgDbiVtShiwa7Z0IZ07Ll4RLFo6AjrhzMtoEZn5PDE3/c2AbVsiCkpA==
   dependencies:
-    chokidar "^3.2.2"
-    debug "^3.2.6"
+    chokidar "^3.5.2"
+    debug "^3.2.7"
     ignore-by-default "^1.0.1"
     minimatch "^3.0.4"
-    pstree.remy "^1.1.7"
+    pstree.remy "^1.1.8"
     semver "^5.7.1"
     supports-color "^5.5.0"
     touch "^3.1.0"
-    undefsafe "^2.0.3"
+    undefsafe "^2.0.5"
     update-notifier "^5.1.0"
 
 nopt@^4.0.1:
@@ -8416,6 +8413,11 @@ prettier@^2.4.1:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.4.1.tgz#671e11c89c14a4cfc876ce564106c4a6726c9f5c"
   integrity sha512-9fbDAXSBcc6Bs1mZrDYb3XKzDLm4EXXL9sC1LqKP5rZkT6KRr/rf9amVUcODVXgguK/isJz0d0hP72WeaKWsvA==
 
+prettier@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.5.1.tgz#fff75fa9d519c54cf0fce328c1017d94546bc56a"
+  integrity sha512-vBZcPRUR5MZJwoyi3ZoyQlc1rXeEck8KgeC9AwwOn+exuxLxq5toTRDTSaVrXHxelDMHy9zlicw8u66yxoSUFg==
+
 pretty-hrtime@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/pretty-hrtime/-/pretty-hrtime-1.0.3.tgz#b7e3ea42435a4c9b2759d99e0f201eb195802ee1"
@@ -8505,7 +8507,7 @@ psl@^1.1.28:
   resolved "https://registry.yarnpkg.com/psl/-/psl-1.8.0.tgz#9326f8bcfb013adcc005fdff056acce020e51c24"
   integrity sha512-RIdOzyoavK+hA18OGGWDqUTsCLhtA7IcZ/6NCs4fFJaHBDab+pDDmDIByWFRQJq2Cd7r1OoQxBGKOaztq+hjIQ==
 
-pstree.remy@^1.1.7:
+pstree.remy@^1.1.8:
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/pstree.remy/-/pstree.remy-1.1.8.tgz#c242224f4a67c21f686839bbdb4ac282b8373d3a"
   integrity sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==
@@ -9855,17 +9857,17 @@ temp-write@^4.0.0:
     temp-dir "^1.0.0"
     uuid "^3.3.2"
 
-temporalio@^0.14.0:
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/temporalio/-/temporalio-0.14.0.tgz#b4974de5c9571dcdb28c596aeea9f5fbcc8be1b5"
-  integrity sha512-UMMWHJDB/ryjlB8ALR2tDywW9+Q+khONAdJWAsKdcaUlUcvxOugCAP/kfWDa6Obl1ODWCJacW6x1FWXFeMsF1A==
+temporalio@^0.17.2:
+  version "0.17.2"
+  resolved "https://registry.yarnpkg.com/temporalio/-/temporalio-0.17.2.tgz#dddcd004abe1eb0ccc985a1f361f15d1c1998fcf"
+  integrity sha512-9ILywk6veI7ygMaOCAArm0/dXsSrAMnHe/PayMMPq3kMkJMOkICw69/LNGZii6+ZRA0xIY378PwntEjx5coW1g==
   dependencies:
-    "@temporalio/activity" "^0.14.0"
-    "@temporalio/client" "^0.14.0"
-    "@temporalio/common" "^0.14.0"
-    "@temporalio/proto" "^0.14.0"
-    "@temporalio/worker" "^0.14.0"
-    "@temporalio/workflow" "^0.14.0"
+    "@temporalio/activity" "^0.17.2"
+    "@temporalio/client" "^0.17.2"
+    "@temporalio/common" "^0.17.2"
+    "@temporalio/proto" "^0.17.2"
+    "@temporalio/worker" "^0.17.2"
+    "@temporalio/workflow" "^0.17.2"
 
 term-size@^2.2.1:
   version "2.2.1"
@@ -10044,12 +10046,12 @@ ts-loader@^9.2.5:
     micromatch "^4.0.0"
     semver "^7.3.4"
 
-ts-node@^10.2.1:
-  version "10.2.1"
-  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.2.1.tgz#4cc93bea0a7aba2179497e65bb08ddfc198b3ab5"
-  integrity sha512-hCnyOyuGmD5wHleOQX6NIjJtYVIO8bPP8F2acWkB4W06wdlkgyvJtubO/I9NkI88hCFECbsEgoLc0VNkYmcSfw==
+ts-node@^10.4.0:
+  version "10.4.0"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.4.0.tgz#680f88945885f4e6cf450e7f0d6223dd404895f7"
+  integrity sha512-g0FlPvvCXSIO1JDF6S232P5jPYqBkRL9qly81ZgAOSU7rwI0stphCgd2kLiCrU9DjQCrJMWEqcNSjQL02s6d8A==
   dependencies:
-    "@cspotcode/source-map-support" "0.6.1"
+    "@cspotcode/source-map-support" "0.7.0"
     "@tsconfig/node10" "^1.0.7"
     "@tsconfig/node12" "^1.0.7"
     "@tsconfig/node14" "^1.0.0"
@@ -10153,10 +10155,15 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript@*, typescript@^4.4.2, typescript@^4.4.3:
+typescript@*, typescript@^4.4.3:
   version "4.4.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
   integrity sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==
+
+typescript@^4.5.4:
+  version "4.5.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.5.4.tgz#a17d3a0263bf5c8723b9c52f43c5084edf13c2e8"
+  integrity sha512-VgYs2A2QIRuGphtzFV7aQJduJ2gyfTljngLzjpfW9FoYZF6xuw1W0vW9ghCKLfcWrCFxK81CSGRAvS1pn4fIUg==
 
 typescript@~4.2:
   version "4.2.4"
@@ -10195,12 +10202,10 @@ unbox-primitive@^1.0.1:
     has-symbols "^1.0.2"
     which-boxed-primitive "^1.0.2"
 
-undefsafe@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/undefsafe/-/undefsafe-2.0.3.tgz#6b166e7094ad46313b2202da7ecc2cd7cc6e7aae"
-  integrity sha512-nrXZwwXrD/T/JXeygJqdCO6NZZ1L66HrxM/Z7mIq2oPanoN0F1nLx3lwJMu6AwJY69hdixaFQOuoYsMjE5/C2A==
-  dependencies:
-    debug "^2.2.0"
+undefsafe@^2.0.5:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/undefsafe/-/undefsafe-2.0.5.tgz#38733b9327bdcd226db889fb723a6efd162e6e2c"
+  integrity sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==
 
 union-value@^1.0.0:
   version "1.0.1"
@@ -10637,6 +10642,11 @@ xstate@^4.25.0:
   resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.25.0.tgz#d902ef33137532043f7a88597af8e5e1c7ad6bdf"
   integrity sha512-qP7lc/ypOuuWME4ArOBnzaCa90TfHkjiqYDmxpiCjPy6FcXstInA2vH6qRVAHbPXRK4KQIYfIEOk1X38P+TldQ==
 
+xstate@^4.27.0:
+  version "4.27.0"
+  resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.27.0.tgz#f3c918ac4229bd5e6dec2231e991ba55c6bfa559"
+  integrity sha512-ohOwDM9tViC/zSSmY9261CHblDPqiaAk5vyjVbi69uJv9fGWMzlm0VDQwM2OvC61GKfXVBeuWSMkL7LPUsTpfA==
+
 xtend@^4.0.2, xtend@~4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
@@ -10722,7 +10732,7 @@ youch@^2.2.2:
     mustache "^4.2.0"
     stack-trace "0.0.10"
 
-zod@^3.9.8:
-  version "3.9.8"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.9.8.tgz#562eda33925203542dea70100ce0d3766d04b0ab"
-  integrity sha512-pTNhdJd45PPOBpdxO8x00Tv+HhknYGx3WdgFQndazp+G1Gd2Cxf81L5yMfCIIcd/SA3VqrcTv/G4bFcr+DsZhA==
+zod@^3.11.6:
+  version "3.11.6"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.11.6.tgz#e43a5e0c213ae2e02aefe7cb2b1a6fa3d7f1f483"
+  integrity sha512-daZ80A81I3/9lIydI44motWe6n59kRBfNzTuS2bfzVh1nAXi667TOTWWtatxyG+fwgNUiagSj/CWZwRRbevJIg==
