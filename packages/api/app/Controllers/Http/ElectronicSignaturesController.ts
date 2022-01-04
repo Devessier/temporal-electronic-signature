@@ -12,12 +12,12 @@ import type {
   statusQuery,
   validateConfirmationCodeSignal,
 } from '@temporal-electronic-signature/temporal/lib/types'
-import { temporalClient } from '../../../start/temporal'
+import { TASK_QUEUE, temporalClient } from '../../../start/temporal'
 
 type QueryReturn<Query> = Query extends QueryDefinition<infer ReturnValue, unknown[]>
   ? ReturnValue
   : never
-type QueryArgs<Query> = Query extends QueryDefinition<unknown, infer Args> ? Args : never
+// type QueryArgs<Query> = Query extends QueryDefinition<unknown, infer Args> ? Args : never
 type SignalArgs<Signal> = Signal extends SignalDefinition<infer Args> ? Args : never
 
 export default class ElectronicSignaturesController {
@@ -47,6 +47,8 @@ export default class ElectronicSignaturesController {
           documentId,
         },
       ],
+      taskQueue: TASK_QUEUE,
+      workflowId: documentId,
     })
 
     return {
