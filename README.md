@@ -4,6 +4,10 @@ Temporal Electronic Signature is a demonstration of Temporal Node.js SDK used wi
 
 https://user-images.githubusercontent.com/29370468/136715088-f016acc4-dd5f-4153-8e1b-f63ff1e40c14.mp4
 
+## Temporal Meetup
+
+Watch the presentation of this project at [the November 2021 Temporal Meetup](https://www.youtube.com/watch?v=GpbOkDjpeYU&t=1615s).
+
 ## What can be done with the application?
 
 - User selects a PDF document and validates her choice. It creates a signature procedure.
