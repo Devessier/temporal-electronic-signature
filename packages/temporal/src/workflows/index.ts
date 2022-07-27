@@ -281,39 +281,7 @@ export async function electronicSignature({
      * It puts the state machine in an engine that reads the configuration and execute all steps.
      * The alive representation of the state machine is called a `service`.
      */
-    const service = interpret(machine, {
-        /**
-         * Define a custom implementation of the clock used by XState to handle
-         * `delayed transitions`, that is transitions that occur after some time.
-         * By default it uses `setTimeout` and `clearTimeout`.
-         * Here we want to ditch the default implementation and use Temporal `sleep` function.
-         * We run `sleep` in a cancellation scope returned by `setTimeout`
-         * so that in `clearTimeout` the timer can actually be cancelled.
-         */
-        clock: {
-            setTimeout(fn, timeout) {
-                const scope = new CancellationScope();
-
-                scope
-                    .run(() => {
-                        return sleep(timeout).then(fn);
-                    })
-                    .catch((err) => {
-                        if (isCancellation(err)) {
-                            return;
-                        }
-
-                        throw err;
-                    });
-
-                return scope;
-            },
-
-            clearTimeout(scope: CancellationScope) {
-                scope.cancel();
-            },
-        },
-    });
+    const service = interpret(machine);
     /**
      * For each transition, we keep track of the new state.
      */
