@@ -8,12 +8,18 @@
     "start": "ts-node src/worker.ts",
     "start.watch": "nodemon src/worker.ts",
     "workflow": "ts-node src/exec-workflow.ts",
-    "lint": "eslint . --ext .ts --fix"
+    "lint": "eslint . --ext .ts --fix",
+    "test": "node -r ts-node/register bin/test.ts"
   },
   "devDependencies": {
+    "@japa/expect": "^1.1.4",
+    "@japa/runner": "^2.0.9",
+    "@japa/spec-reporter": "^1.1.12",
+    "@temporalio/testing": "^1.0.0",
     "@tsconfig/node14": "^1.0.1",
     "@types/ms": "^0.7.31",
     "@types/nodemailer": "^6.4.4",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^4.32.0",
     "@typescript-eslint/parser": "^4.32.0",
     "dotenv": "^10.0.0",
@@ -23,7 +29,8 @@
     "nodemon": "^2.0.15",
     "prettier": "^2.5.1",
     "ts-node": "^10.4.0",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "uuid": "^8.3.2"
   },
   "nodemonConfig": {
     "watch": [
