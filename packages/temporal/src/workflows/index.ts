@@ -51,137 +51,119 @@ type ElectronicSignatureMachineEvents =
           type: 'CANCEL_PROCEDURE';
       };
 
-const electronicSignatureMachine = createMachine<
-    ElectronicSignatureMachineContext,
-    ElectronicSignatureMachineEvents
->({
-    id: 'electronicSignatureMachine',
-
-    initial: 'pendingSignature',
-
-    context: {
-        sendingConfirmationCodeTries: 0,
-        email: undefined,
-        confirmationCode: undefined,
-    },
-
-    states: {
-        pendingSignature: {
-            after: {
-                120_000: {
-                    target: 'procedureExpired',
-                },
-            },
-
-            initial: 'waitingAgreement',
-
-            states: {
-                waitingAgreement: {
-                    on: {
-                        ACCEPT_DOCUMENT: {
-                            target: 'waitingEmail',
-                        },
+const electronicSignatureMachine =
+    /** @xstate-layout N4IgpgJg5mDOIC5RgDZgMYBcBOB7AdgJboDKhU+AhpgK7ZgCyl6AFofmAHQAOY+E7KGQrU6XAO6VCmQQEEo9MAFs+mAMSyAwpoCiABQAqAfQAiAeU0BVBjoByBxKG65Y0wgUcgAHogBMAVgAWTgAGf38ARl9A-wBmCNiAdgA2cIAaEABPRAiATgAOTgLfENyQ5MTc5MDk31iAX3qM1AwcAmJhKlp6JlZ2Ll5+QU7Rek5JN3woHSUpFDUSHWMdBlkASQAZT2dXGQ8kb0RkkNjOWN9k1OTcxMDEoP8M7IQIys5A-MSQk8DvmryGk1wGgsHgiKRyF0xL02BweHwBFMRt0uDAONhqIJNAQAGaEbCzPb4bEQMBqCAELjsABuuAA1lwWqD2hCRCiYf14UMkZDRqi+GAMTIptj8HiCZiCCSwAgabh0JL8ABtEIAXW2Ljc+1APheITeqQKt18EX1+oiTxybw+Xx+f2SAMazRBbXByOhzFhAwRw15KM4sB9Itx+MJ7mJuFJCzsxk0ZlsADE1gAlVYGNbxoxxkw6DW7cOeXVRe6cZLnGKJaJ5QK+S0IC7Jd7HfIRQKxWIhfLhCJO4GtMEdP0evpwwaIoRDsYTYVQUXisNSyNkgBqsg2axMsgMOiz8aTqa3Gdsu5zea1+ELOX1uVL-iNNdNX0SFqyiH83zOXdSiR-MXy+UCXsmVdQc2WHL0uXHd0pykGc51DRVpTUZMdEWWwTF3RMUzTI8T1zA4dnPS89QNO9PgfM1nzreJgkCOiYjNXxPhufwgJdAdWShHpPU5MdfTAsZXAoQQTHlGgVHwdQSDWABxWwdAw8wrBsewzyJYiIi7U5yleWI4kuTSTTrOJ-DOSs9JrOjyjY-sWWgxgeNHIMJwEskKThWBMGoRl2LsycHJHb1uRcriwDUgsDl1OoIlM3IkgA3xclyaIAkCaiYlLe5YnyTtzgiKJfBs5k3X8jknOC+y1E0WRbF0DYjD0ZMLAUywUPC7VDnreJYvimskpSoI6w+XxOBSeJonyVJ8iYsIipAzi+TKoKoP8tQvE87zOEoHFMEFAAKKJvm+ABKNRgI4+ylsg-jQvai9Ir8bqil6xLkprQbX3rTtOH8T4ywqApYiqc5GiBfAl3gA5zr81yrr4nlXPGWC5AUMBlFUO7iMrOsAXeRIcuuFt3yCfI5ou0rHOWm6+SRyZplmQgUExh6EH+M5cjyRJst+EIElrT7cbuHK9NbMIClbMmYdCuHnPszg0UFTFgzFBCiWlZmdUQW5G00-HygA9sOeSHGKiKfJYgfMoEi7OjJZK2HKeuhHQoDZz4IlNWlw1zqYo+ThfGfCpfxOXmX2ePIRsrSaWxy6bqmSO3QOlx34ZCmnpyxEMPfDdWCM1dSWYAkJOBbYpzeuFIYuoktAgjmLNJbDs9MThb2RT2X-IDSERLEiTMG9ot-BSUta7KACObbRJjJCYIkliZIbe-JLAWdWz7eTwKnbT-1uDwdBIDEZdKBQQgIG8iAB78MJElCE0O2fcXO2MxKzkuGpajbZKuZby724q-zL6s3yHWXIsUObPlKO+a4AdCpAmhuvRaKc94H3oDoLw3B8SQEARNQoMQOz5SHvqAOjxPolBGr9V4LZqi-nyLkH+FNN673lCgsAR8T5n12hfPO+YOpRTbMXQIyULiJWygbaiQNSzXH8AEBerZqErz7MVJOiDGHIIgGITQlB8D7xQGgLhTh84RU1vWaRN5l65VqPlaaaVPp3EbPcSsIQTQczqJ8ehDtArYJsc8aIoN6hAA */
+    createMachine<
+        ElectronicSignatureMachineContext,
+        ElectronicSignatureMachineEvents
+    >({
+        context: {
+            sendingConfirmationCodeTries: 0,
+            email: undefined,
+            confirmationCode: undefined,
+        },
+        id: 'electronicSignatureMachine',
+        initial: 'pendingSignature',
+        states: {
+            pendingSignature: {
+                initial: 'waitingAgreement',
+                after: {
+                    '120000': {
+                        target: 'procedureExpired',
                     },
                 },
-
-                waitingEmail: {
-                    on: {
-                        SET_EMAIL: {
-                            target: 'generatingConfirmationCode',
-
-                            actions: 'assignEmail',
+                states: {
+                    waitingAgreement: {
+                        on: {
+                            ACCEPT_DOCUMENT: {
+                                target: 'waitingEmail',
+                            },
                         },
                     },
-                },
-
-                generatingConfirmationCode: {
-                    invoke: {
-                        src: 'generateConfirmationCode',
-
-                        onDone: {
-                            target: 'sendingConfirmationCode',
-
-                            actions: assign({
-                                confirmationCode: (_context, { data }) => data,
-                            }),
+                    waitingEmail: {
+                        on: {
+                            SET_EMAIL: {
+                                actions: 'assignEmail',
+                                target: 'generatingConfirmationCode',
+                            },
                         },
                     },
-                },
-
-                sendingConfirmationCode: {
-                    invoke: {
-                        src: 'sendConfirmationCode',
-                    },
-
-                    on: {
-                        SENT_CONFIRMATION_CODE: {
-                            target: 'waitingConfirmationCode',
-                        },
-                    },
-                },
-
-                waitingConfirmationCode: {
-                    on: {
-                        VALIDATE_CONFIRMATION_CODE: {
-                            cond: 'isConfirmationCodeCorrect',
-
-                            target: 'signingDocument',
-                        },
-
-                        RESEND_CONFIRMATION_CODE: {
-                            cond: 'hasNotReachedConfirmationCodeSendingLimit',
-
-                            target: 'sendingConfirmationCode',
-
-                            actions: [
-                                'incrementSendingConfirmationCodeTries',
-                                'resetConfirmationCode',
+                    generatingConfirmationCode: {
+                        invoke: {
+                            src: 'generateConfirmationCode',
+                            onDone: [
+                                {
+                                    actions: assign({
+                                        confirmationCode: (
+                                            _context,
+                                            { data },
+                                        ) => data,
+                                    }),
+                                    target: 'sendingConfirmationCode',
+                                },
                             ],
                         },
                     },
-                },
-
-                signingDocument: {
-                    invoke: {
-                        src: 'signDocument',
-                    },
-
-                    on: {
-                        SIGNED_DOCUMENT: {
-                            target: 'procedureValidated',
+                    sendingConfirmationCode: {
+                        invoke: {
+                            src: 'sendConfirmationCode',
+                        },
+                        on: {
+                            SENT_CONFIRMATION_CODE: {
+                                target: 'waitingConfirmationCode',
+                            },
                         },
                     },
+                    waitingConfirmationCode: {
+                        on: {
+                            VALIDATE_CONFIRMATION_CODE: {
+                                cond: 'isConfirmationCodeCorrect',
+                                target: 'signingDocument',
+                            },
+                            RESEND_CONFIRMATION_CODE: {
+                                actions: [
+                                    'incrementSendingConfirmationCodeTries',
+                                    'resetConfirmationCode',
+                                ],
+                                cond: 'hasNotReachedConfirmationCodeSendingLimit',
+                                target: 'sendingConfirmationCode',
+                            },
+                        },
+                    },
+                    signingDocument: {
+                        invoke: {
+                            src: 'signDocument',
+                        },
+                        on: {
+                            SIGNED_DOCUMENT: {
+                                target: 'procedureValidated',
+                            },
+                        },
+                    },
+                    procedureValidated: {
+                        type: 'final',
+                    },
                 },
-
-                procedureValidated: {
-                    type: 'final',
+                on: {
+                    CANCEL_PROCEDURE: {
+                        target: 'procedureCancelled',
+                    },
+                },
+                onDone: {
+                    target: 'procedureValidated',
                 },
             },
-
-            on: {
-                CANCEL_PROCEDURE: {
-                    target: 'procedureCancelled',
-                },
+            procedureExpired: {
+                type: 'final',
             },
-
-            onDone: {
-                target: 'procedureValidated',
+            procedureValidated: {
+                type: 'final',
+            },
+            procedureCancelled: {
+                type: 'final',
             },
         },
-
-        procedureExpired: {
-            type: 'final',
-        },
-
-        procedureValidated: {
-            type: 'final',
-        },
-
-        procedureCancelled: {
-            type: 'final',
-        },
-    },
-});
+    });
 
 interface ElectronicSignatureWorkflowArgs {
     documentId: string;

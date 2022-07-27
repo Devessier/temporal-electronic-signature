@@ -15,7 +15,9 @@ export default class AppProvider {
       return
     }
 
-    await import('../start/temporal')
+    const { configureTemporalClient } = await import('../start/temporal')
+
+    await configureTemporalClient()
   }
 
   public async shutdown() {

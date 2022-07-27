@@ -2,11 +2,14 @@ import { Connection, WorkflowClient } from '@temporalio/client'
 
 export const TASK_QUEUE = 'electronic-signature'
 
-function createTemporalClient() {
-  const connection = new Connection()
-  const client = new WorkflowClient(connection.service)
+export let temporalClient: WorkflowClient
 
-  return client
+export async function configureTemporalClient() {
+  const connection = await Connection.connect({})
+
+  const client = new WorkflowClient({
+    connection,
+  })
+
+  temporalClient = client
 }
-
-export const temporalClient = createTemporalClient()
