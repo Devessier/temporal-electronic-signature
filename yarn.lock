@@ -3203,10 +3203,22 @@
     "@webassemblyjs/ast" "1.11.1"
     "@xtuc/long" "4.2.2"
 
+"@xstate/graph@^2.0.0-alpha.0":
+  version "2.0.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@xstate/graph/-/graph-2.0.0-alpha.0.tgz#8abf2668c397e810af5ce05a0aa18224ed5c578e"
+  integrity sha512-POFB4/1ersakSX2Jm6+qMr5E1uelx50hG6cx/g6YXmaCei0OT9bP24HjMYktXjy8ruMm8D56CdCPBybCOhzLkg==
+
 "@xstate/svelte@^0.2.0":
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/@xstate/svelte/-/svelte-0.2.0.tgz#a26a96da14b569f6145fe2ac5d1b4664e80e143d"
   integrity sha512-SwPEz0oY6T4B4xvFFqJsuXfNyA0PoEhkrbO3jDQ6fXhwx/x9+Y38mM5w+qGnPtczI7UJ+T0XKWn5GJJsH4JbRA==
+
+"@xstate/test@^1.0.0-alpha.0":
+  version "1.0.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@xstate/test/-/test-1.0.0-alpha.0.tgz#0ac0b64c0873b78c7753c5401441a1cc51ee3c20"
+  integrity sha512-8++CcsHWQBAsqbG7J68/Ct/oQOqH3L/5e7YEXa3VookV5xrP/XG5Xigd2aUpvvNuoNl/XknqrNidvCdln6RiHg==
+  dependencies:
+    "@xstate/graph" "^2.0.0-alpha.0"
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
