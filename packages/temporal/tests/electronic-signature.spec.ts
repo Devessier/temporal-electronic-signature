@@ -2,10 +2,19 @@ import { test } from '@japa/runner';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { Worker } from '@temporalio/worker';
 import { v4 as uuid4 } from 'uuid';
-import { electronicSignature, statusQuery } from '../src/workflows';
+import {
+    acceptDocumentSignal,
+    cancelProcedureSignal,
+    electronicSignature,
+    resendConfirmationCodeSignal,
+    setEmailForCodeSignal,
+    statusQuery,
+    validateConfirmationCodeSignal,
+} from '../src/workflows';
 import type * as Activities from '../src/activities'; // Uses types to ensure our mock signatures match
 import { createTestMachine, createTestModel } from '@xstate/test';
-import { assign } from 'xstate';
+import { assign, EventFrom } from 'xstate';
+import { spy } from 'sinon';
 
 let testEnv: TestWorkflowEnvironment;
 
@@ -131,25 +140,146 @@ test.group('Electronic signature model-based', (group) => {
         };
     });
 
-    // for (const path of electronicSignatureModel.getSimplePathsTo(
-    //     (state) => state.done === true,
-    // )) {
-    for (const path of electronicSignatureModel.getPaths({
-        eventCases: {
-            'Provide confirmation code': [
-                {
-                    confirmationCode: 'Invalid code',
-                },
-                {
-                    confirmationCode: 'LOL',
-                },
-            ],
-        },
-    })) {
-        test(path.description, async () => {
-            await path.test({
-                states: {},
-                events: {},
+    for (const path of electronicSignatureModel
+        .getPaths({
+            eventCases: {
+                'Provide confirmation code': [
+                    {
+                        confirmationCode: 'Invalid code',
+                    },
+                    {
+                        confirmationCode: 'LOL',
+                    },
+                ],
+            },
+        })
+        .slice(0, 1)) {
+        test(path.description, async ({ expect }) => {
+            const { workflowClient, nativeConnection } = testEnv;
+
+            const sendConfirmationCodeEmailSpy = spy();
+            const stampDocumentSpy = spy();
+
+            // Implement only the relevant activities for this workflow
+            const mockActivities: Partial<typeof Activities> = {
+                generateConfirmationCode: async () => 'LOL',
+                sendConfirmationCodeEmail: sendConfirmationCodeEmailSpy,
+                stampDocument: stampDocumentSpy,
+            };
+            const worker = await Worker.create({
+                connection: nativeConnection,
+                taskQueue: 'test',
+                workflowsPath: require.resolve('../src/workflows'),
+                activities: mockActivities,
+            });
+
+            await worker.runUntil(async () => {
+                const handle = await workflowClient.start(electronicSignature, {
+                    args: [{ documentId: uuid4() }],
+                    workflowId: uuid4(),
+                    taskQueue: 'test',
+                });
+
+                await path.test({
+                    states: {
+                        'Cancelled procedure': async () => {
+                            console.log('in Cancelled procedure function');
+
+                            const status = await handle.query(statusQuery);
+
+                            expect(status).toBe('CANCELLED');
+                        },
+                        'Procedure expired': async () => {
+                            console.log('in Procedure expired function');
+
+                            const status = await handle.query(statusQuery);
+
+                            expect(status).toBe('EXPIRED');
+                        },
+                        'Signed document': async () => {
+                            console.log('in Signed document function');
+
+                            const status = await handle.query(statusQuery);
+
+                            expect(status).toBe('VALIDATED');
+                        },
+                        'Waiting for agreement': async () => {
+                            console.log('in Waiting for agreement function');
+
+                            const status = await handle.query(statusQuery);
+
+                            expect(status).toBe('PENDING.WAITING_AGREEMENT');
+                        },
+                        'Waiting for confirmation code': async () => {
+                            console.log(
+                                'in Waiting for confirmation code function',
+                            );
+
+                            const status = await handle.query(statusQuery);
+
+                            expect(status).toBe(
+                                'PENDING.WAITING_CONFIRMATION_CODE',
+                            );
+                        },
+                        'Waiting for confirmation code.Email has been sent':
+                            () => {
+                                console.log(
+                                    'in Waiting for confirmation code.Email has been sent function',
+                                );
+
+                                expect(
+                                    sendConfirmationCodeEmailSpy.called,
+                                ).toBe(true);
+                            },
+                        'Waiting for confirmation code.Reached confirmation code sending limit':
+                            () => {
+                                console.log(
+                                    'in Waiting for confirmation code.Reached confirmation code sending limit function',
+                                );
+
+                                expect(
+                                    sendConfirmationCodeEmailSpy.callCount,
+                                ).toBe(3);
+                            },
+                        'Waiting for email': async () => {
+                            console.log('in Waiting for email function');
+
+                            const status = await handle.query(statusQuery);
+
+                            expect(status).toBe('PENDING.WAITING_AGREEMENT');
+                        },
+                    },
+                    events: {
+                        'Accept document': async () => {
+                            await handle.signal(acceptDocumentSignal);
+                        },
+                        'Provide email': async () => {
+                            await handle.signal(setEmailForCodeSignal, {
+                                email: 'email@google.com',
+                            });
+                        },
+                        'Provide confirmation code': async ({ event }) => {
+                            const { confirmationCode } = event as EventFrom<
+                                typeof electronicSignatureModelMachine,
+                                'Provide confirmation code'
+                            >;
+
+                            await handle.signal(
+                                validateConfirmationCodeSignal,
+                                { confirmationCode },
+                            );
+                        },
+                        'Cancel procedure': async () => {
+                            await handle.signal(cancelProcedureSignal);
+                        },
+                        'Resend confirmation code': async () => {
+                            await handle.signal(resendConfirmationCodeSignal);
+                        },
+                        'Reached procedure expiration delay': async () => {
+                            await testEnv.sleep('2 minutes');
+                        },
+                    },
+                });
             });
         });
     }
