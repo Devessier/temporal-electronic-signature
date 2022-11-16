@@ -40,10 +40,8 @@ export interface Typegen0 {
         resetConfirmationCode: 'RESEND_CONFIRMATION_CODE';
     };
     eventsCausingServices: {
-        generateConfirmationCode: 'SET_EMAIL';
-        sendConfirmationCode:
-            | 'RESEND_CONFIRMATION_CODE'
-            | 'done.invoke.electronicSignatureMachine.pendingSignature.generatingConfirmationCode:invocation[0]';
+        generateConfirmationCode: 'RESEND_CONFIRMATION_CODE' | 'SET_EMAIL';
+        sendConfirmationCode: 'done.invoke.electronicSignatureMachine.pendingSignature.generatingConfirmationCode:invocation[0]';
         signDocument: 'VALIDATE_CONFIRMATION_CODE';
     };
     eventsCausingGuards: {

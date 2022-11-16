@@ -121,7 +121,7 @@ const electronicSignatureMachine =
                                     'resetConfirmationCode',
                                 ],
                                 cond: 'hasNotReachedConfirmationCodeSendingLimit',
-                                target: 'sendingConfirmationCode',
+                                target: 'generatingConfirmationCode',
                             },
                         },
                     },
