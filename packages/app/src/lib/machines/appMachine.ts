@@ -330,7 +330,9 @@ export const appMachine = appModel.createMachine(
 					}
 				}
 			}
-		}
+		},
+		predictableActionArguments: true,
+		preserveActionOrder: true,
 	},
 	{
 		services: {
