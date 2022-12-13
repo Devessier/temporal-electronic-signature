@@ -10,7 +10,7 @@ services:
     networks:
       - temporal-network
     ports:
-      - 5432:5432
+      - 5440:5432
 
   temporal:
     container_name: temporal

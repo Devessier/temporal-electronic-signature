@@ -1,11 +1,8 @@
 import {
     proxyActivities,
-    sleep,
     defineQuery,
     defineSignal,
     setHandler,
-    CancellationScope,
-    isCancellation,
 } from '@temporalio/workflow';
 import { createMachine, assign, interpret, StateFrom } from 'xstate';
 import type * as activities from '../activities';
@@ -17,171 +14,153 @@ const { generateConfirmationCode, sendConfirmationCodeEmail, stampDocument } =
         startToCloseTimeout: '1 minute',
     });
 
-interface ElectronicSignatureMachineContext {
-    email: string | undefined;
-    sendingConfirmationCodeTries: number;
-    confirmationCode: string | undefined;
-}
-
-type ElectronicSignatureMachineEvents =
-    | {
-          type: 'PROCEDURE_TIMEOUT';
-      }
-    | {
-          type: 'ACCEPT_DOCUMENT';
-      }
-    | {
-          type: 'SET_EMAIL';
-          email: string;
-      }
-    | {
-          type: 'SENT_CONFIRMATION_CODE';
-      }
-    | {
-          type: 'VALIDATE_CONFIRMATION_CODE';
-          confirmationCode: string;
-      }
-    | {
-          type: 'RESEND_CONFIRMATION_CODE';
-      }
-    | {
-          type: 'SIGNED_DOCUMENT';
-      }
-    | {
-          type: 'CANCEL_PROCEDURE';
-      };
-
-const electronicSignatureMachine = createMachine<
-    ElectronicSignatureMachineContext,
-    ElectronicSignatureMachineEvents
->({
-    id: 'electronicSignatureMachine',
-
-    initial: 'pendingSignature',
-
-    context: {
-        sendingConfirmationCodeTries: 0,
-        email: undefined,
-        confirmationCode: undefined,
-    },
-
-    states: {
-        pendingSignature: {
-            after: {
-                120_000: {
-                    target: 'procedureExpired',
-                },
+const electronicSignatureMachine =
+    /** @xstate-layout N4IgpgJg5mDOIC5RgDZgMYBcBOB7AdgJboDKhU+AhpgK7ZgCyl6AFofmAHQAOY+E7KGQrU6XAO6VCmQQEEo9MAFs+mAMSyAwpoCiABQAqAfQAiAeU0BVBjoByBxKG65Y0wgUcgAHogBMAVgAWTgAGf38ARl9A-wBmCNiAdgA2cIAaEABPRAiATgAOTgLfENyQ5MTc5MDk31iAX3qM1AwcAmJhKlp6JlZ2Ll5+QU7Rek5JN3woHSUpFDUSHWMdBlkASQAZT2dXGQ8kb0RkkNjOWN9k1OTcxMDEoP8M7IQIys5A-MSQk8DvmryGk1wGgsHgiKRyF0xL02BweHwBFMRt0uDAONhqIJNAQAGaEbCzPb4bEQMBqCAELjsABuuAA1lwWqD2hCRCiYf14UMkZDRqi+GAMTIptj8HiCZiCCSwAgabh0JL8ABtEIAXW2Ljc+1APheITeqQKt18EX1+oiTxybw+Xx+f2SAMazRBbXByOhzFhAwRw15KM4sB9Itx+MJ7mJuFJCzsxk0ZlsADE1gAlVYGNbxoxxkw6DW7cOeXVRe6cZLnGKJaJ5QK+S0IC7Jd7HfIRQKxWIhfLhCJO4GtMEdP0evpwwaIoRDsYTYVQUXisNSyNkgBqsg2axMsgMOiz8aTqa3Gdsu5zea1+ELOX1uVL-iNNdNX0SFqyiH83zOXdSiR-MXy+UCXsmVdQc2WHL0uXHd0pykGc51DRVpTUZMdEWWwTF3RMUzTI8T1zA4dnPS89QNO9PgfM1nzreJgkCOiYjNXxPhufwgJdAdWShHpPU5MdfTAsZXAoQQTHlGgVHwdQSDWABxWwdAw8wrBsewzyJYiIi7U5yleWI4kuTSTTrOJ-DOSs9JrOjyjY-sWWgxgeNHIMJwEskKThWBMGoRl2LsycHJHb1uRcriwDUgsDl1OoIlM3IkgA3xclyaIAkCaiYlLe5YnyTtzgiKJfBs5k3X8jknOC+y1E0WRbF0DYjD0ZMLAUywUPC7VDnreJYvimskpSoI6w+XxOBSeJonyVJ8iYsIipAzi+TKoKoP8tQvE87zOEoHFMEFAAKKJvm+ABKNRgI4+ylsg-jQvai9Ir8bqil6xLkprQbX3rTtOH8T4ywqApYiqc5GiBfAl3gA5zr81yrr4nlXPGWC5AUMBlFUO7iMrOsAXeRIcuuFt3yCfI5ou0rHOWm6+SRyZplmQgUExh6EH+M5cjyRJst+EIElrT7cbuHK9NbMIClbMmYdCuHnPszg0UFTFgzFBCiWlZmdUQW5G00-HygA9sOeSHGKiKfJYgfMoEi7OjJZK2HKeuhHQoDZz4IlNWlw1zqYo+ThfGfCpfxOXmX2ePIRsrSaWxy6bqmSO3QOlx34ZCmnpyxEMPfDdWCM1dSWYAkJOBbYpzeuFIYuoktAgjmLNJbDs9MThb2RT2X-IDSERLEiTMG9ot-BSUta7KACObbRJjJCYIkliZIbe-JLAWdWz7eTwKnbT-1uDwdBIDEZdKBQQgIG8iAB78MJElCE0O2fcXO2MxKzkuGpajbZKuZby724q-zL6s3yHWKooRTQ1luEkPIuQgg-wppvXe8oD70B0F4bg+JICAImoUGIHZ8pD31AHR4n0SgjV+q8Fs1Rfz5FyHAh2CC97ILAEfE+Z9doXzzvmDqUU2zF0CMlC4iVsoG2okDUs1x-ABAXq2KhK8+zFSTotFOjCIBiE0JQfA+8UBoA4U4fOEVNb1kkTeZeuVaj5WmmlT6dxGz3ErCEE0HM6ifDoRvL0WCrHPGiKEcsqQHH-nxiTUG9QgA */
+    createMachine({
+        predictableActionArguments: true,
+        preserveActionOrder: true,
+        context: {
+            sendingConfirmationCodeTries: 0,
+            email: undefined,
+            confirmationCode: undefined,
+        },
+        tsTypes: {} as import('./index.typegen').Typegen0,
+        schema: {
+            context: {} as {
+                email: string | undefined;
+                sendingConfirmationCodeTries: number;
+                confirmationCode: string | undefined;
             },
-
-            initial: 'waitingAgreement',
-
-            states: {
-                waitingAgreement: {
-                    on: {
-                        ACCEPT_DOCUMENT: {
-                            target: 'waitingEmail',
-                        },
+            events: {} as
+                | {
+                      type: 'PROCEDURE_TIMEOUT';
+                  }
+                | {
+                      type: 'ACCEPT_DOCUMENT';
+                  }
+                | {
+                      type: 'SET_EMAIL';
+                      email: string;
+                  }
+                | {
+                      type: 'SENT_CONFIRMATION_CODE';
+                  }
+                | {
+                      type: 'VALIDATE_CONFIRMATION_CODE';
+                      confirmationCode: string;
+                  }
+                | {
+                      type: 'RESEND_CONFIRMATION_CODE';
+                  }
+                | {
+                      type: 'SIGNED_DOCUMENT';
+                  }
+                | {
+                      type: 'CANCEL_PROCEDURE';
+                  },
+            services: {} as {
+                generateConfirmationCode: {
+                    data: string;
+                };
+            },
+        },
+        id: 'electronicSignatureMachine',
+        initial: 'pendingSignature',
+        states: {
+            pendingSignature: {
+                initial: 'waitingAgreement',
+                after: {
+                    '120000': {
+                        target: 'procedureExpired',
                     },
                 },
-
-                waitingEmail: {
-                    on: {
-                        SET_EMAIL: {
-                            target: 'generatingConfirmationCode',
-
-                            actions: 'assignEmail',
+                states: {
+                    waitingAgreement: {
+                        on: {
+                            ACCEPT_DOCUMENT: {
+                                target: 'waitingEmail',
+                            },
                         },
                     },
-                },
-
-                generatingConfirmationCode: {
-                    invoke: {
-                        src: 'generateConfirmationCode',
-
-                        onDone: {
-                            target: 'sendingConfirmationCode',
-
-                            actions: assign({
-                                confirmationCode: (_context, { data }) => data,
-                            }),
+                    waitingEmail: {
+                        on: {
+                            SET_EMAIL: {
+                                actions: 'assignEmail',
+                                target: 'generatingConfirmationCode',
+                            },
                         },
                     },
-                },
-
-                sendingConfirmationCode: {
-                    invoke: {
-                        src: 'sendConfirmationCode',
-                    },
-
-                    on: {
-                        SENT_CONFIRMATION_CODE: {
-                            target: 'waitingConfirmationCode',
-                        },
-                    },
-                },
-
-                waitingConfirmationCode: {
-                    on: {
-                        VALIDATE_CONFIRMATION_CODE: {
-                            cond: 'isConfirmationCodeCorrect',
-
-                            target: 'signingDocument',
-                        },
-
-                        RESEND_CONFIRMATION_CODE: {
-                            cond: 'hasNotReachedConfirmationCodeSendingLimit',
-
-                            target: 'sendingConfirmationCode',
-
-                            actions: [
-                                'incrementSendingConfirmationCodeTries',
-                                'resetConfirmationCode',
+                    generatingConfirmationCode: {
+                        invoke: {
+                            src: 'generateConfirmationCode',
+                            onDone: [
+                                {
+                                    actions: 'assignConfirmationCode',
+                                    target: 'sendingConfirmationCode',
+                                },
                             ],
                         },
                     },
-                },
-
-                signingDocument: {
-                    invoke: {
-                        src: 'signDocument',
-                    },
-
-                    on: {
-                        SIGNED_DOCUMENT: {
-                            target: 'procedureValidated',
+                    sendingConfirmationCode: {
+                        invoke: {
+                            src: 'sendConfirmationCode',
+                        },
+                        on: {
+                            SENT_CONFIRMATION_CODE: {
+                                target: 'waitingConfirmationCode',
+                            },
                         },
                     },
+                    waitingConfirmationCode: {
+                        on: {
+                            VALIDATE_CONFIRMATION_CODE: {
+                                cond: 'isConfirmationCodeCorrect',
+                                target: 'signingDocument',
+                            },
+                            RESEND_CONFIRMATION_CODE: {
+                                actions: [
+                                    'incrementSendingConfirmationCodeTries',
+                                    'resetConfirmationCode',
+                                ],
+                                cond: 'hasNotReachedConfirmationCodeSendingLimit',
+                                target: 'generatingConfirmationCode',
+                            },
+                        },
+                    },
+                    signingDocument: {
+                        invoke: {
+                            src: 'signDocument',
+                        },
+                        on: {
+                            SIGNED_DOCUMENT: {
+                                target: 'procedureValidated',
+                            },
+                        },
+                    },
+                    procedureValidated: {
+                        type: 'final',
+                    },
                 },
-
-                procedureValidated: {
-                    type: 'final',
+                on: {
+                    CANCEL_PROCEDURE: {
+                        target: 'procedureCancelled',
+                    },
+                },
+                onDone: {
+                    target: 'procedureValidated',
                 },
             },
-
-            on: {
-                CANCEL_PROCEDURE: {
-                    target: 'procedureCancelled',
-                },
+            procedureExpired: {
+                type: 'final',
             },
-
-            onDone: {
-                target: 'procedureValidated',
+            procedureValidated: {
+                type: 'final',
+            },
+            procedureCancelled: {
+                type: 'final',
             },
         },
-
-        procedureExpired: {
-            type: 'final',
-        },
-
-        procedureValidated: {
-            type: 'final',
-        },
-
-        procedureCancelled: {
-            type: 'final',
-        },
-    },
-});
+    });
 
 interface ElectronicSignatureWorkflowArgs {
     documentId: string;
@@ -284,6 +263,10 @@ export async function electronicSignature({
             resetConfirmationCode: assign({
                 confirmationCode: (_context, _event) => undefined,
             }),
+
+            assignConfirmationCode: assign({
+                confirmationCode: (_context, { data }) => data,
+            }),
         },
     });
     /**
@@ -299,39 +282,7 @@ export async function electronicSignature({
      * It puts the state machine in an engine that reads the configuration and execute all steps.
      * The alive representation of the state machine is called a `service`.
      */
-    const service = interpret(machine, {
-        /**
-         * Define a custom implementation of the clock used by XState to handle
-         * `delayed transitions`, that is transitions that occur after some time.
-         * By default it uses `setTimeout` and `clearTimeout`.
-         * Here we want to ditch the default implementation and use Temporal `sleep` function.
-         * We run `sleep` in a cancellation scope returned by `setTimeout`
-         * so that in `clearTimeout` the timer can actually be cancelled.
-         */
-        clock: {
-            setTimeout(fn, timeout) {
-                const scope = new CancellationScope();
-
-                scope
-                    .run(() => {
-                        return sleep(timeout).then(fn);
-                    })
-                    .catch((err) => {
-                        if (isCancellation(err)) {
-                            return;
-                        }
-
-                        throw err;
-                    });
-
-                return scope;
-            },
-
-            clearTimeout(scope: CancellationScope) {
-                scope.cancel();
-            },
-        },
-    });
+    const service = interpret(machine);
     /**
      * For each transition, we keep track of the new state.
      */
@@ -347,6 +298,49 @@ export async function electronicSignature({
      * It is typesafe.
      */
     const send = service.send.bind(service);
+
+    /**
+     * `formatStateMachineState` transforms the current state of the state machine
+     * into an universal identifier.
+     * We do not want to depend on states naming outside of the state machine.
+     *
+     * If the state is unknown, we throw an error.
+     */
+    function formatStateMachineState(
+        state: StateFrom<typeof machine>,
+    ): ElectronicSignatureProcedureStatus {
+        if (state.matches('pendingSignature.waitingAgreement')) {
+            return 'PENDING.WAITING_AGREEMENT';
+        }
+        if (state.matches('pendingSignature.waitingEmail')) {
+            return 'PENDING.WAITING_EMAIL';
+        }
+        if (state.matches('pendingSignature.generatingConfirmationCode')) {
+            return 'PENDING.GENERATING_CONFIRMATION_CODE';
+        }
+        if (state.matches('pendingSignature.sendingConfirmationCode')) {
+            return 'PENDING.SENDING_CONFIRMATION_CODE';
+        }
+        if (state.matches('pendingSignature.waitingConfirmationCode')) {
+            return 'PENDING.WAITING_CONFIRMATION_CODE';
+        }
+        if (state.matches('pendingSignature.signingDocument')) {
+            return 'PENDING.SIGNING_DOCUMENT';
+        }
+        if (state.matches('procedureExpired')) {
+            return 'EXPIRED';
+        }
+        if (state.matches('procedureValidated')) {
+            return 'VALIDATED';
+        }
+        if (state.matches('procedureCancelled')) {
+            return 'CANCELLED';
+        }
+
+        throw new Error(
+            'Reached unreachable state; a state has probably been added or renamed from the state machine and needs to be normalized in formatStateMachineState function',
+        );
+    }
 
     /**
      * Queries derive data from the current state of the state machine.
@@ -404,47 +398,4 @@ export async function electronicSignature({
      * Return the final state of the machine.
      */
     return formatStateMachineState(state);
-}
-
-/**
- * `formatStateMachineState` transforms the current state of the state machine
- * into an universal identifier.
- * We do not want to depend on states naming outside of the state machine.
- *
- * If the state is unknown, we throw an error.
- */
-function formatStateMachineState(
-    state: StateFrom<typeof electronicSignatureMachine>,
-): ElectronicSignatureProcedureStatus {
-    if (state.matches('pendingSignature.waitingAgreement')) {
-        return 'PENDING.WAITING_AGREEMENT';
-    }
-    if (state.matches('pendingSignature.waitingEmail')) {
-        return 'PENDING.WAITING_EMAIL';
-    }
-    if (state.matches('pendingSignature.generatingConfirmationCode')) {
-        return 'PENDING.GENERATING_CONFIRMATION_CODE';
-    }
-    if (state.matches('pendingSignature.sendingConfirmationCode')) {
-        return 'PENDING.SENDING_CONFIRMATION_CODE';
-    }
-    if (state.matches('pendingSignature.waitingConfirmationCode')) {
-        return 'PENDING.WAITING_CONFIRMATION_CODE';
-    }
-    if (state.matches('pendingSignature.signingDocument')) {
-        return 'PENDING.SIGNING_DOCUMENT';
-    }
-    if (state.matches('procedureExpired')) {
-        return 'EXPIRED';
-    }
-    if (state.matches('procedureValidated')) {
-        return 'VALIDATED';
-    }
-    if (state.matches('procedureCancelled')) {
-        return 'CANCELLED';
-    }
-
-    throw new Error(
-        'Reached unreachable state; a state has probably been added or renamed from the state machine and needs to be normalized in formatStateMachineState function',
-    );
 }
