@@ -1,187 +1,268 @@
 import {
     proxyActivities,
-    sleep,
     defineQuery,
     defineSignal,
     setHandler,
-    CancellationScope,
-    isCancellation,
 } from '@temporalio/workflow';
 import { createMachine, assign, interpret, StateFrom } from 'xstate';
 import type * as activities from '../activities';
 import { ElectronicSignatureProcedureStatus } from '../types';
-import { assertEventType } from '../utils/machine/events';
 
 const { generateConfirmationCode, sendConfirmationCodeEmail, stampDocument } =
     proxyActivities<typeof activities>({
         startToCloseTimeout: '1 minute',
     });
 
-interface ElectronicSignatureMachineContext {
-    email: string | undefined;
-    sendingConfirmationCodeTries: number;
-    confirmationCode: string | undefined;
-}
+/**
+ * The XState machine that powers the workflow.
+ *
+ * It uses [Typegen](https://xstate.js.org/docs/guides/typescript.html#typegen) to
+ * improve TypeScript support. Thanks to Typegen, we know which events will cause
+ * a service/action/guard/delay to get executed, and what will be the value of `event`
+ * parameter for them.
+ *
+ * I also designed the machine by using Stately Visual Editor. Go check [Stately](https://stately.ai/) website!
+ */
+const electronicSignatureMachine =
+    /** @xstate-layout N4IgpgJg5mDOIC5RgDZgMYBcBOB7AdgJboDKhU+AhpgK7ZgCyl6AFofmAHQAOY+E7KGQrU6YAMQQCXWJmpdUGHAWLCqtek1bsuvfoLWj6AbQAMAXUShuuWIUyECVkAA9EAJgCsngGycfABwAjJ5BAJymQQGmpgEANCAAnh4A7AGc7tHh7gDMACzuKSk5PgC+pQmKWHhEpOTqYlpsHDx8AvhC9UYSAMIAggByPQCiADIA+gAKAEoA8iMAIgCq08NmlkggNnYOTptuCF6m7pymYSlhgQFhOZ7BOQnJCDkBnqehBTmmty85YeWVNDVFR1EQaRjMZq6NoGLrg8QuWTyTiUABmmDA2AAFEF3DEYgBKcRVZS1Qzgpo6Vr6DrksTrZzbeyOfDOA5eTwncJ5HJ4lKFTxhIIPJKIIIpUycUIvTwpPKmHy3RWeAHgIGk1RwxqQql6dqdMFiTgAd0ozI6fSg9DAAFs+JhxH0eiNJgAVcYLeZLBjDAauhmbJm7Vn7Dyy04pTk+Yr8nJBPLRx5iuWnXE8vKvHyefJlCpqpQ1TWGzQ6lp62HFrim81QYY2s0ocQkYbu4YMPoASVGAestmZe1ABx84U4eRSPncWZuuN+SYQIUlYWnsvHQVMeUueVVJMLoIaJe0ZZhtK19E4MA42Gogh6BFRhGw9eDt4gEikLXYADdcABrBTq3c6QPKFqX1ICuAvTFrw6W98HvR9rwIF8wAQL9cHQRD8HWHstj7YM2TFUxI04HIigCPIN0idcxznEITg3HweTOAIAglCIAm3ACQXAykjxpA19xkY8oFg+CnxZZDJGkTg0L-Tgd2408IUPaF+PAzhYGE0SH3EpDcFfVD8G-DDg2wixGTwlkCIQYI8k4AI-nXAJ3HOXlLjnTJJXCccKKOFzvk4gtFMrXjVLApSTTNBwYLvHTMMkgA1PpRg7BY+ldYZxh6WYBgAMQ7aZ21dDscqy2YFjWczA0sgdXEIlNMjXIIfDCTweTxPI505E4hWuTMfEiMI8hVPMFLJJTQtAitBMimttIQ599IkVZmwGBYyrygqipKgYyoqnCgys0N5zOMIMmzdwQl5PI12uOcviCDJikuBVmvcdxhq3UauPGkLSzC6bug0+pBAWdCaDtfAHXfLhZP-ILfsEybyxPStgYoUHwchzBDOMzCzI2XsdiOwcxValJTincc8SG1i5wKSUiMKG4Xg+nlczzfAlvgTYxqLJH-os4naoOABaD653FnJOCXMJrlCc4fCzCiRsBBH+e6ZHhPAoX+xDUnDk60UEEVUdLkVXFghay7AuBRHNf+qbUZm6toqgS1rWx3X8OO-laJTTwiKFTIhvlY5VfzO2NYpR2UYEoHXcEOsG29km6oQMc7OCOXLrSRVWp8f27MDi5LdDmIcltjU9wdlSnfj8Fzz4KC3fm3T8GQ1ORcQcd0ity6Shp9raNCVNmtIy6XNa+Mq8AibY+1iLNP4tv4qWrv9fT5ryJluNLlyQUZ0L433ulyJBQnF4XrudxZ+CgW67j9TE5iuC4sW18N+s5zpZCeNMhlNcSI9Mzj+BuENcIsQEwsTvvbGOj9F5ozsBjDoYN0AQ3tF-Y64pYhSglM5AI0YogDU8Pdc4EZwjXAonKNIKRYHR21AgtSEVuB4HQJAMQCVKAoEIBAeQEAsEG1zo9G6oRhwZgTIxemI5eTrneniQI7NcxqyjjXeBIFWHoQ4fQYYLhuAPkgII9OhQUiPRITkUiLFyLilotGTgkZs4SnlHKUiX0VHVx4rHNh2iwBcJ4XwjEAjqrC03uyccbx4wJlxIUQex8ngCilB9Ri5FcikVMZXb66s1GMI0d4iAYgeiUHwOwlAaAglEz1tZQoE5-BpBKK1EoEoUj3QcvYpcTMvicmcuUcoQA */
+    createMachine(
+        {
+            id: 'electronicSignatureMachine',
 
-type ElectronicSignatureMachineEvents =
-    | {
-          type: 'PROCEDURE_TIMEOUT';
-      }
-    | {
-          type: 'ACCEPT_DOCUMENT';
-      }
-    | {
-          type: 'SET_EMAIL';
-          email: string;
-      }
-    | {
-          type: 'SENT_CONFIRMATION_CODE';
-      }
-    | {
-          type: 'VALIDATE_CONFIRMATION_CODE';
-          confirmationCode: string;
-      }
-    | {
-          type: 'RESEND_CONFIRMATION_CODE';
-      }
-    | {
-          type: 'SIGNED_DOCUMENT';
-      }
-    | {
-          type: 'CANCEL_PROCEDURE';
-      };
+            tsTypes: {} as import('./index.typegen').Typegen0,
 
-const electronicSignatureMachine = createMachine<
-    ElectronicSignatureMachineContext,
-    ElectronicSignatureMachineEvents
->({
-    id: 'electronicSignatureMachine',
-
-    initial: 'pendingSignature',
-
-    context: {
-        sendingConfirmationCodeTries: 0,
-        email: undefined,
-        confirmationCode: undefined,
-    },
-
-    states: {
-        pendingSignature: {
-            after: {
-                120_000: {
-                    target: 'procedureExpired',
+            schema: {
+                context: {} as {
+                    documentId: string;
+                    email: string | undefined;
+                    sendingConfirmationCodeTries: number;
+                    confirmationCode: string | undefined;
+                },
+                events: {} as
+                    | {
+                          type: 'PROCEDURE_TIMEOUT';
+                      }
+                    | {
+                          type: 'ACCEPT_DOCUMENT';
+                      }
+                    | {
+                          type: 'SET_EMAIL';
+                          email: string;
+                      }
+                    | {
+                          type: 'VALIDATE_CONFIRMATION_CODE';
+                          confirmationCode: string;
+                      }
+                    | {
+                          type: 'RESEND_CONFIRMATION_CODE';
+                      }
+                    | {
+                          type: 'CANCEL_PROCEDURE';
+                      },
+                services: {} as {
+                    generateConfirmationCode: {
+                        data: string;
+                    };
+                    sendConfirmationCode: {
+                        data: void;
+                    };
+                    signDocument: {
+                        data: void;
+                    };
                 },
             },
 
-            initial: 'waitingAgreement',
+            initial: 'pendingSignature',
+
+            context: {
+                documentId: '', // Will be redefined when starting the machine inside the workflow.
+                sendingConfirmationCodeTries: 0,
+                email: undefined,
+                confirmationCode: undefined,
+            },
 
             states: {
-                waitingAgreement: {
-                    on: {
-                        ACCEPT_DOCUMENT: {
-                            target: 'waitingEmail',
+                pendingSignature: {
+                    after: {
+                        120_000: {
+                            target: 'procedureExpired',
                         },
+                    },
+
+                    initial: 'waitingAgreement',
+
+                    states: {
+                        waitingAgreement: {
+                            on: {
+                                ACCEPT_DOCUMENT: {
+                                    target: 'waitingEmail',
+                                },
+                            },
+                        },
+
+                        waitingEmail: {
+                            on: {
+                                SET_EMAIL: {
+                                    target: 'generatingConfirmationCode',
+
+                                    actions: 'assignEmail',
+                                },
+                            },
+                        },
+
+                        generatingConfirmationCode: {
+                            invoke: {
+                                src: 'generateConfirmationCode',
+
+                                onDone: {
+                                    target: 'sendingConfirmationCode',
+                                    actions: 'assignConfirmationCode',
+                                },
+                            },
+                        },
+
+                        sendingConfirmationCode: {
+                            invoke: {
+                                src: 'sendConfirmationCode',
+
+                                onDone: {
+                                    target: 'waitingConfirmationCode',
+                                },
+                            },
+                        },
+
+                        waitingConfirmationCode: {
+                            on: {
+                                VALIDATE_CONFIRMATION_CODE: {
+                                    cond: 'isConfirmationCodeCorrect',
+
+                                    target: 'signingDocument',
+                                },
+
+                                RESEND_CONFIRMATION_CODE: {
+                                    cond: 'hasNotReachedConfirmationCodeSendingLimit',
+
+                                    target: 'sendingConfirmationCode',
+
+                                    actions: [
+                                        'incrementSendingConfirmationCodeTries',
+                                        'resetConfirmationCode',
+                                    ],
+                                },
+                            },
+                        },
+
+                        signingDocument: {
+                            invoke: {
+                                src: 'signDocument',
+
+                                onDone: {
+                                    target: 'procedureValidated',
+                                },
+                            },
+                        },
+
+                        procedureValidated: {
+                            type: 'final',
+                        },
+                    },
+
+                    on: {
+                        CANCEL_PROCEDURE: {
+                            target: 'procedureCancelled',
+                        },
+                    },
+
+                    onDone: {
+                        target: 'procedureValidated',
                     },
                 },
 
-                waitingEmail: {
-                    on: {
-                        SET_EMAIL: {
-                            target: 'generatingConfirmationCode',
-
-                            actions: 'assignEmail',
-                        },
-                    },
-                },
-
-                generatingConfirmationCode: {
-                    invoke: {
-                        src: 'generateConfirmationCode',
-
-                        onDone: {
-                            target: 'sendingConfirmationCode',
-
-                            actions: assign({
-                                confirmationCode: (_context, { data }) => data,
-                            }),
-                        },
-                    },
-                },
-
-                sendingConfirmationCode: {
-                    invoke: {
-                        src: 'sendConfirmationCode',
-                    },
-
-                    on: {
-                        SENT_CONFIRMATION_CODE: {
-                            target: 'waitingConfirmationCode',
-                        },
-                    },
-                },
-
-                waitingConfirmationCode: {
-                    on: {
-                        VALIDATE_CONFIRMATION_CODE: {
-                            cond: 'isConfirmationCodeCorrect',
-
-                            target: 'signingDocument',
-                        },
-
-                        RESEND_CONFIRMATION_CODE: {
-                            cond: 'hasNotReachedConfirmationCodeSendingLimit',
-
-                            target: 'sendingConfirmationCode',
-
-                            actions: [
-                                'incrementSendingConfirmationCodeTries',
-                                'resetConfirmationCode',
-                            ],
-                        },
-                    },
-                },
-
-                signingDocument: {
-                    invoke: {
-                        src: 'signDocument',
-                    },
-
-                    on: {
-                        SIGNED_DOCUMENT: {
-                            target: 'procedureValidated',
-                        },
-                    },
+                procedureExpired: {
+                    type: 'final',
                 },
 
                 procedureValidated: {
                     type: 'final',
                 },
-            },
 
-            on: {
-                CANCEL_PROCEDURE: {
-                    target: 'procedureCancelled',
+                procedureCancelled: {
+                    type: 'final',
                 },
             },
 
-            onDone: {
-                target: 'procedureValidated',
+            predictableActionArguments: true,
+
+            preserveActionOrder: true,
+        },
+        {
+            services: {
+                generateConfirmationCode: (_context, _event) => {
+                    return generateConfirmationCode();
+                },
+
+                sendConfirmationCode: async (
+                    { confirmationCode, email },
+                    _event,
+                ) => {
+                    try {
+                        if (
+                            confirmationCode === undefined ||
+                            email === undefined
+                        ) {
+                            throw new Error(
+                                'Confirmation code and email must be defined to send the confirmation code by email',
+                            );
+                        }
+
+                        await sendConfirmationCodeEmail({
+                            confirmationCode,
+                            email,
+                        });
+                    } catch (err) {
+                        console.error(err);
+                    }
+                },
+
+                signDocument: async (context, _event) => {
+                    try {
+                        await stampDocument(context.documentId);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                },
+            },
+            actions: {
+                incrementSendingConfirmationCodeTries: assign({
+                    sendingConfirmationCodeTries: (
+                        { sendingConfirmationCodeTries },
+                        _event,
+                    ) => sendingConfirmationCodeTries + 1,
+                }),
+
+                assignEmail: assign({
+                    email: (_context, event) => event.email,
+                }),
+
+                resetConfirmationCode: assign({
+                    confirmationCode: (_context, _event) => undefined,
+                }),
+
+                assignConfirmationCode: assign({
+                    confirmationCode: (_context, event) => event.data,
+                }),
+            },
+            guards: {
+                hasNotReachedConfirmationCodeSendingLimit: (
+                    { sendingConfirmationCodeTries },
+                    _event,
+                ) => sendingConfirmationCodeTries < 3,
+
+                isConfirmationCodeCorrect: ({ confirmationCode }, event) =>
+                    confirmationCode === event.confirmationCode,
             },
         },
-
-        procedureExpired: {
-            type: 'final',
-        },
-
-        procedureValidated: {
-            type: 'final',
-        },
-
-        procedureCancelled: {
-            type: 'final',
-        },
-    },
-});
+    );
 
 interface ElectronicSignatureWorkflowArgs {
     documentId: string;
@@ -207,84 +288,9 @@ export async function electronicSignature({
     /**
      * Create a custom machine with the documentId of the procedure.
      */
-    const machine = electronicSignatureMachine.withConfig({
-        services: {
-            generateConfirmationCode: async (_context, _event) => {
-                return await generateConfirmationCode();
-            },
-
-            sendConfirmationCode:
-                ({ confirmationCode, email }, _event) =>
-                async (sendBack) => {
-                    try {
-                        if (
-                            confirmationCode === undefined ||
-                            email === undefined
-                        ) {
-                            throw new Error(
-                                'Confirmation code and email must be defined to send the confirmation code by email',
-                            );
-                        }
-
-                        await sendConfirmationCodeEmail({
-                            confirmationCode,
-                            email,
-                        });
-
-                        sendBack({
-                            type: 'SENT_CONFIRMATION_CODE',
-                        });
-                    } catch (err) {
-                        console.error(err);
-                    }
-                },
-
-            signDocument: (_context, _event) => async (sendBack) => {
-                try {
-                    await stampDocument(documentId);
-
-                    sendBack({
-                        type: 'SIGNED_DOCUMENT',
-                    });
-                } catch (err) {
-                    console.error(err);
-                }
-            },
-        },
-
-        guards: {
-            hasNotReachedConfirmationCodeSendingLimit: (
-                { sendingConfirmationCodeTries },
-                _event,
-            ) => sendingConfirmationCodeTries < 3,
-
-            isConfirmationCodeCorrect: ({ confirmationCode }, event) => {
-                assertEventType(event, 'VALIDATE_CONFIRMATION_CODE');
-
-                return confirmationCode === event.confirmationCode;
-            },
-        },
-
-        actions: {
-            incrementSendingConfirmationCodeTries: assign({
-                sendingConfirmationCodeTries: (
-                    { sendingConfirmationCodeTries },
-                    _event,
-                ) => sendingConfirmationCodeTries + 1,
-            }),
-
-            assignEmail: assign({
-                email: (_context, event) => {
-                    assertEventType(event, 'SET_EMAIL');
-
-                    return event.email;
-                },
-            }),
-
-            resetConfirmationCode: assign({
-                confirmationCode: (_context, _event) => undefined,
-            }),
-        },
+    const machine = electronicSignatureMachine.withContext({
+        ...electronicSignatureMachine.context,
+        documentId,
     });
     /**
      * State holds the current state of the state machine.
@@ -299,39 +305,7 @@ export async function electronicSignature({
      * It puts the state machine in an engine that reads the configuration and execute all steps.
      * The alive representation of the state machine is called a `service`.
      */
-    const service = interpret(machine, {
-        /**
-         * Define a custom implementation of the clock used by XState to handle
-         * `delayed transitions`, that is transitions that occur after some time.
-         * By default it uses `setTimeout` and `clearTimeout`.
-         * Here we want to ditch the default implementation and use Temporal `sleep` function.
-         * We run `sleep` in a cancellation scope returned by `setTimeout`
-         * so that in `clearTimeout` the timer can actually be cancelled.
-         */
-        clock: {
-            setTimeout(fn, timeout) {
-                const scope = new CancellationScope();
-
-                scope
-                    .run(() => {
-                        return sleep(timeout).then(fn);
-                    })
-                    .catch((err) => {
-                        if (isCancellation(err)) {
-                            return;
-                        }
-
-                        throw err;
-                    });
-
-                return scope;
-            },
-
-            clearTimeout(scope: CancellationScope) {
-                scope.cancel();
-            },
-        },
-    });
+    const service = interpret(machine);
     /**
      * For each transition, we keep track of the new state.
      */
