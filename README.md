@@ -33,7 +33,7 @@ Let's see how the workflow is organized with states. [Open the visualizer](https
 
 Those are the instructions to launch the signature system locally.
 
-Except `docker-compose` package, all commands will have to be executed in separate shells and kept alived.
+Except `docker-compose` package, all commands will have to be executed in separate shells and kept alive.
 
 #### Dependencies
 
